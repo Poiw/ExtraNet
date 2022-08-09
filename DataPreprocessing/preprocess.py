@@ -6,6 +6,8 @@ import glob
 from multiprocessing import Process
 # from win32com.shell import shellcon, shell
 
+from os.path import join as pjoin
+
 ENABLE_OCCWARP = True
 ENABLE_DEMODULATE = True
 
@@ -18,8 +20,10 @@ DEBUG_MV = True
 
 WARP_NUM = 5
 
+platform = "Linux"
+cp_command = "cp" if platform == 'Linux' else "copy"
 
-Thread_NUM = 8  # make sure sampleNumber / Thread_NUM > 5
+Thread_NUM = 4  # make sure sampleNumber / Thread_NUM > 5
 
 class GlobalInfo():
 
@@ -124,9 +128,10 @@ def init(path):
 
     PrefixSN = ""
     PrefixPreTM = "PreTonemapHDRColor."
-    for filePath in glob.glob(path + "\\*"):
+    for filePath in glob.glob(pjoin(path, "*")):
         if PrefixPreTM in filePath:
-            PrefixSN = filePath.split('\\')[-1].split(PrefixPreTM)[0]
+            # PrefixSN = filePath.split('\\')[-1].split(PrefixPreTM)[0]
+            PrefixSN = os.path.basename(filePath).split(PrefixPreTM)[0]
             break
 
     globalInfo = GlobalInfo(path, PrefixSN)
@@ -134,7 +139,7 @@ def init(path):
     start = 9999
     end = 0
 
-    for filePath in glob.glob(path + "/*"):
+    for filePath in glob.glob(pjoin(path, "*")):
         if PrefixPreTM in filePath:
             idx = int(filePath.split('.')[1])
             start = min(start, idx)
@@ -174,7 +179,7 @@ def demodulate(id, globalInfo, start, end):
     print("Process-", id, " demodulate from", start, " to ", end)
     
     fix_start = start
-    for filePath in glob.glob(globalInfo.mDemodulatePath + "/*"):
+    for filePath in glob.glob(pjoin(globalInfo.mDemodulatePath, "*")):
         if globalInfo.PrefixPreTM in filePath:
             idx = int(filePath.split('.')[1])
             if idx < end and idx >= fix_start:
@@ -415,7 +420,7 @@ def make_hole(id, globalInfo, start, end):
     # end = fix_end
 
     fix_start = start
-    for filePath in glob.glob(globalInfo.mGTPath + "/*"):
+    for filePath in glob.glob(pjoin(globalInfo.mGTPath, "*")):
         if globalInfo.PrefixGT in filePath:
             idx = int(filePath.split('.')[1])
             if idx < end and idx >= fix_start:
@@ -617,7 +622,7 @@ def merge_files(globalInfo, start, end):
     print("merge gbuffer from", start, " to ", end)
 
     fix_start = start
-    for filePath in glob.glob(globalInfo.mGbuffer + "/*"):
+    for filePath in glob.glob(pjoin(globalInfo.mGbuffer, "*")):
         if globalInfo.PrefixBC in filePath:
             idx = int(filePath.split('.')[1])
             if idx < end and idx >= fix_start:
@@ -636,18 +641,22 @@ def merge_files(globalInfo, start, end):
         idx = str(i).zfill(4)
         # idx_next = str(i + 1).zfill(4)
         for gbuffer_prefix in Gbuffer_list:
-            src_filepath = globalInfo.mPath + "\\" + gbuffer_prefix + idx + ".exr"
-            dst_filepath = globalInfo.mGbuffer + "\\" + gbuffer_prefix + idx + ".exr"
+            # src_filepath = globalInfo.mPath + "\\" + gbuffer_prefix + idx + ".exr"
+            # dst_filepath = globalInfo.mGbuffer + "\\" + gbuffer_prefix + idx + ".exr"
+            src_filepath = pjoin(globalInfo.mPath, gbuffer_prefix + idx + ".exr")
+            dst_filepath = pjoin(globalInfo.mGbuffer, gbuffer_prefix + idx + ".exr")
             
             # print (src_filepath, " => ", dst_filepath)
-            os.system ("copy %s %s" % (src_filepath, dst_filepath))
+            os.system ("%s %s %s" % (cp_command, src_filepath, dst_filepath))
             # shell.SHFileOperation((0, shellcon.FO_COPY, src_filepath, dst_filepath, shellcon.FOF_NOCONFIRMMKDIR, None, None))
             # copyfile(src_filepath, dst_filepath)
         
         # BaseColor is prev frame
-        src_filepath = globalInfo.mPath + "\\" + globalInfo.PrefixBC + idx + ".exr"
-        dst_filepath = globalInfo.mGbuffer + "\\" + globalInfo.PrefixBC + idx + ".exr"
-        os.system ("copy %s %s" % (src_filepath, dst_filepath))
+        # src_filepath = globalInfo.mPath + "\\" + globalInfo.PrefixBC + idx + ".exr"
+        # dst_filepath = globalInfo.mGbuffer + "\\" + globalInfo.PrefixBC + idx + ".exr"
+        src_filepath = pjoin(globalInfo.mPath, globalInfo.PrefixBC + idx + ".exr")
+        dst_filepath = pjoin(globalInfo.mGbuffer, globalInfo.PrefixBC + idx + ".exr")
+        os.system ("%s %s %s" % (cp_command, src_filepath, dst_filepath))
         # shell.SHFileOperation((0, shellcon.FO_COPY, src_filepath, dst_filepath, shellcon.FOF_NOCONFIRMMKDIR, None, None))
         # copyfile(src_filepath, dst_filepath)
 
@@ -733,6 +742,11 @@ def main(args):
 
 
 if __name__ == "__main__":
+
+    if platform not in ['Linux', 'Win']:
+        print('Wrong platform type')
+        exit(0)
+
     main(sys.argv)
 
 
