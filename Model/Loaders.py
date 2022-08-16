@@ -6,6 +6,7 @@ cv.setNumThreads(0)
 import numpy as np
 import config
 import time
+from os.path import join as pjoin
 from utils import ImgRead,ImgWrite, ToneSimple,ImgReadWithPrefix,ReadData
 
 class MedTrainDataset(data.Dataset):
@@ -34,7 +35,7 @@ class MedTrainDataset(data.Dataset):
     def __getitem__(self, index):
         path, idx = self.mapIndex2PathAndIndex(index)
         try:
-            img, img_2, img_3, occ_warp_img, woCheckimg, woCheckimg_2, woCheckimg_3, labelimg, metalic, Roughnessimg, Depthimg, Normalimg = ReadData(path+"compressed.{}.npz".format(idx))
+            img, img_2, img_3, occ_warp_img, woCheckimg, woCheckimg_2, woCheckimg_3, labelimg, metalic, Roughnessimg, Depthimg, Normalimg = ReadData(pjoin(path, "compressed.{}.npz".format(idx)))
         except:
             print(path)
             print(idx)

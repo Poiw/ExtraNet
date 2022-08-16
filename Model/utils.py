@@ -7,7 +7,7 @@ def ImgRead(mPath,idx,prefix= None,format=".exr",cvtGray=False,cvtrgb=False):
     if prefix == None:
         prefix=files[0].split(".")[0]
     if format==".exr":
-        img = cv.imread(os.path.join(mPath,prefix+"."+str(idx).zfill(4)+format),cv.IMREAD_UNCHANGED)
+        img = cv.imread(os.path.join(mPath,prefix+"."+str(idx).zfill(4)+format),cv.IMREAD_UNCHANGED)[..., 0:3]
     else:
         img = cv.imread(os.path.join(mPath,prefix+"."+str(idx).zfill(4)+format))
     if cvtrgb == True:
@@ -25,7 +25,7 @@ def ImgReadWithPrefix(mPath,idx,p=None,prefix= None,format=".exr",cvtGray=False,
     if prefix == None:
         prefix=files[0].split(".")[0]
     if format==".exr":
-        img = cv.imread(os.path.join(mPath,prefix+"."+str(idx).zfill(4)+"."+p+format),cv.IMREAD_UNCHANGED)
+        img = cv.imread(os.path.join(mPath,prefix+"."+str(idx).zfill(4)+"."+p+format),cv.IMREAD_UNCHANGED)[..., 0:3]
     else:
         img = cv.imread(os.path.join(mPath,prefix+"."+str(idx).zfill(4)+format))
     if cvtrgb == True:

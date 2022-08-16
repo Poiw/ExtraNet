@@ -1,3 +1,6 @@
+import os
+os.environ["OPENCV_IO_ENABLE_OPENEXR"]="1"
+
 import Loaders
 import ExtraNet
 import torch.nn as nn
@@ -12,20 +15,19 @@ import torch.nn.functional as F
 from torchvision.utils import save_image
 from torch import optim
 import Losses
-import os
 import torch
 import time
 from torch.utils.tensorboard import SummaryWriter
 
-
+from os.path import join as pjoin
 
 def GetStartEnd(path):
     start = 99999
     end = 0
     prefix = None
-    for filePath in glob.glob(path + "GT/*"):
+    for filePath in glob.glob(pjoin(path, "GT", "*")):
         if prefix == None:
-            prefix = filePath.split("\\")[-1].split('.')[0][:-2]
+            prefix = filePath.split("/")[-1].split('.')[0][:-2]
         idx = int(filePath.split('.')[1])
         start = min(start, idx)
         end = max(end, idx)
@@ -34,7 +36,7 @@ def GetStartEnd(path):
     return start, end+1, prefix
 
 
-def inference(modelPath):
+def inference(modelPath, path, prefix, idx, outputDir):
 
     model = ExtraNet.ExtraNet(18,3)
 
@@ -44,19 +46,15 @@ def inference(modelPath):
     model=model.cuda()
     model.eval()
     with torch.no_grad():
-        path = "../TestData/"
-        prefix = "MedievalDocks"
-        idx = 339
+
+        img = ImgReadWithPrefix(pjoin(path, "warp_res"), int(idx),"1", cvtrgb=True)
+        img_2 = ImgReadWithPrefix(pjoin(path, "warp_res"), int(idx),"3", cvtrgb=True)
+        img_3 = ImgReadWithPrefix(pjoin(path, "warp_res"), int(idx),"5", cvtrgb=True)
 
 
-        img = ImgReadWithPrefix(path+"warp_res", int(idx),"1", cvtrgb=True)
-        img_2 = ImgReadWithPrefix(path+"warp_res", int(idx),"3", cvtrgb=True)
-        img_3 = ImgReadWithPrefix(path+"warp_res", int(idx),"5", cvtrgb=True)
-
-
-        warp_image = ImgReadWithPrefix(path+"warp_no_hole",idx,"1",prefix=prefix+config.warpPrefix,cvtrgb=True)
-        warp_image_2 = ImgReadWithPrefix(path+"warp_no_hole",idx,"3",prefix=prefix+config.warpPrefix,cvtrgb=True)
-        warp_image_3 = ImgReadWithPrefix(path+"warp_no_hole",idx,"5",prefix=prefix+config.warpPrefix,cvtrgb=True)
+        warp_image = ImgReadWithPrefix(pjoin(path, "warp_no_hole"),idx,"1",prefix=prefix+config.warpPrefix,cvtrgb=True)
+        warp_image_2 = ImgReadWithPrefix(pjoin(path, "warp_no_hole"),idx,"3",prefix=prefix+config.warpPrefix,cvtrgb=True)
+        warp_image_3 = ImgReadWithPrefix(pjoin(path, "warp_no_hole"),idx,"5",prefix=prefix+config.warpPrefix,cvtrgb=True)
     
 
         Normalimg = ImgRead(path, idx, prefix=prefix+config.TestNormalPrefix, cvtrgb=True)
@@ -66,9 +64,9 @@ def inference(modelPath):
         Depthimg = (Depthimg - Depthimg.min()) / (Depthimg.max() - Depthimg.min() + 1e-6)
         Roughnessimg = ImgRead(path, idx, prefix=prefix+config.TestRoughnessPrefix, cvtrgb=True)[:,:,0].reshape((Normalimg.shape[0],Normalimg.shape[1], 1))
         
-        
+        gt = ImgRead(path, idx, prefix=prefix+config.PreTonemapHDRColor, cvtrgb=False)
 
-        occ_warp_img = ImgReadWithPrefix(path+"occ",idx,"1",prefix=prefix+config.warpPrefix, cvtrgb=True)
+        occ_warp_img = ImgReadWithPrefix(pjoin(path, "occ"),idx,"1",prefix=prefix+config.warpPrefix, cvtrgb=True)
 
         input = img
         mask = input.copy()
@@ -135,8 +133,8 @@ def inference(modelPath):
 
         albedo = ImgRead(path, idx,prefix=prefix+"BaseColor", cvtrgb=False)
 
-        skybox = ImgRead(path, idx,prefix=prefix+"Skybox", cvtrgb=False)
-        # skybox = ImgRead(path, idx,prefix=prefix+"PreTonemapHDRColor", cvtrgb=False)  # For simplicity, the skybox can be extracted from PreTonemapHDRColor file by counting only pixels with normal of (-1,-1,-1).
+        # skybox = ImgRead(path, idx,prefix=prefix+"Skybox", cvtrgb=False)
+        skybox = ImgRead(path, idx,prefix=prefix+"PreTonemapHDRColor", cvtrgb=False)  # For simplicity, the skybox can be extracted from PreTonemapHDRColor file by counting only pixels with normal of (-1,-1,-1).
 
 
         res=res*albedo
@@ -144,7 +142,8 @@ def inference(modelPath):
         hole = np.logical_and(Normalimg[:,:,0] == -1, Normalimg[:,:,1] == -1)
         hole = np.logical_and(Normalimg[:,:,2] == -1, hole)
         res[hole] = skybox[hole]
-        ImgWrite("../TestData","res",idx,res)
+        ImgWrite(outputDir,"res",idx,res)
+        ImgWrite(outputDir,"gt",idx,gt)
                 
 
 def Tensor2NP(t):
@@ -156,7 +155,11 @@ def Tensor2NP(t):
 
 
 if __name__ =="__main__":
-    inference('medieval.pth.tar')
+    inference('medieval.pth.tar', 
+        path = "../TestData", 
+        prefix = "MedievalDocks",
+        idx = 339,
+        outputDir='../Test_Res/')
     
     
 
