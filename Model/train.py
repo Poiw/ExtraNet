@@ -16,6 +16,8 @@ import torch
 import time
 #from torch.utils.tensorboard import SummaryWriter
 
+from os.path import join as pjoin
+
 
 
 def Tensor2NP(t):
@@ -27,7 +29,7 @@ def Tensor2NP(t):
 
 
 
-def train(dataLoaderIns, modelSavePath):
+def train(dataLoaderIns, saveDir, modelName):
     model = ExtraNet.ExtraNet(18,3)
 
     model = model.to(config.mdevice)
@@ -77,9 +79,9 @@ def train(dataLoaderIns, modelSavePath):
         if e % 5 == 0:
             torch.save({'epoch': e + 1, 'state_dict': model.state_dict(), 
                         'optimizer': optimizer.state_dict()},
-                         './totalModel.{}.pth.tar'.format(e))
+                         pjoin(saveDir, 'totalModel.{}.pth.tar'.format(e)))
 
-    torch.save(model.state_dict(), modelSavePath)
+    torch.save(model.state_dict(), pjoin(saveDir, modelName))
 
     
     
@@ -92,5 +94,5 @@ if __name__ =="__main__":
     trainDiffuseDataset = Loaders.MedTrainDataset(0)
     trainDiffuseLoader = data.DataLoader(trainDiffuseDataset,config.batch_size,shuffle=True,num_workers=6, pin_memory=True)
     
-    train(trainDiffuseLoader, "./finalModel.pkl")
+    train(trainDiffuseLoader, "../trainModels", "finalModel.pkl")
    

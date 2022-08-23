@@ -12,7 +12,7 @@ from os.path import join as pjoin
 
 threadNum = 4
 compressedOutputDir = "/home/poi/Data/Research/extraNet/Data/RedwoodForest_Compressed_New"
-dirList = ["/home/poi/Data/Research/extraNet/Data/RedwoodForest"]
+dirList = ["/home/poi/Data/Research/extraNet/Data/RedwoodForest_updated"]
 ScenePrefix = "RedwoodForest_Example_Procedural"
 
 
