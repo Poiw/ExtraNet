@@ -94,5 +94,8 @@ if __name__ =="__main__":
     trainDiffuseDataset = Loaders.MedTrainDataset(0)
     trainDiffuseLoader = data.DataLoader(trainDiffuseDataset,config.batch_size,shuffle=True,num_workers=6, pin_memory=True)
     
-    train(trainDiffuseLoader, "../trainModels", "finalModel.pkl")
+    if not os.path.exists(config.saving_dir):
+        os.mkdir(config.saving_dir)
+
+    train(trainDiffuseLoader, config.saving_dir, "finalModel.pkl")
    
