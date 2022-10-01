@@ -25,7 +25,9 @@ WARP_NUM = 5
 platform = "Linux"
 cp_command = "cp" if platform == 'Linux' else "copy"
 
-Thread_NUM = 4  # make sure sampleNumber / Thread_NUM > 5
+glossiness_scene = True
+
+Thread_NUM = 16  # make sure sampleNumber / Thread_NUM > 5
 
 class GlobalInfo():
 
@@ -148,6 +150,8 @@ def init(path):
             start = min(start, idx)
             end = max(end, idx)
 
+    start += 2
+
     print("Scene name: ", PrefixSN, "start: ", start, "end: ", end)
 
     return globalInfo, start, end
@@ -197,8 +201,19 @@ def demodulate(id, globalInfo, start, end):
         # img_BaseColor = cv.imread(os.path.join(globalInfo.mPath, globalInfo.PrefixBC + idx_next + ".exr"), cv.IMREAD_UNCHANGED)
         img_BaseColor = cv.imread(os.path.join(globalInfo.mPath, globalInfo.PrefixBC + idx + ".exr"), cv.IMREAD_UNCHANGED)[..., :3]
 
-        img_Res = img / img_BaseColor
-        img_Res[img_BaseColor == 0] = 0
+        if glossiness_scene:
+            img_Sepcular = cv.imread(os.path.join(globalInfo.mPath, globalInfo.PrefixSpe + idx + ".exr"), cv.IMREAD_UNCHANGED)[..., :3]
+            img_Metallic = cv.imread(os.path.join(globalInfo.mPath, globalInfo.PrefixMetallic + idx + ".exr"), cv.IMREAD_UNCHANGED)[..., :3]
+
+            img_Albedo = img_BaseColor + img_Sepcular * 0.08 * ( 1-img_Metallic ) 
+
+            img_Res = img / img_Albedo
+            img_Res[img_Albedo == 0] = 0
+        
+        else:
+            img_Res = img / img_BaseColor
+            img_Res[img_BaseColor == 0] = 0
+        
         cv.imwrite(os.path.join(globalInfo.mDemodulatePath, globalInfo.PrefixPreTM + idx + ".exr"), img_Res)
         
         print("Process-", id, ": finish ", idx)
