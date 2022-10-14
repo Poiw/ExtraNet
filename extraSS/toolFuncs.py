@@ -1,14 +1,10 @@
 import numpy as np
 
 
-def Linear_Warp(img, warp_list, weight_list, padding_value=0):
+def Linear_Warp(img, height, width, warp_list, weight_list):
 
     warp2_i0, warp2_j0, warp2_i1, warp2_j1 = warp_list
     weight2_i0, weight2_i1, weight2_j0, weight2_j1 = weight_list
-
-    height, width = img.shape[0], img.shape[1]
-
-    img = np.pad(img, ((1, 1), (1, 1), (0, 0)), constant_values=padding_value)
 
     res2_i0j0 = img[warp2_i0, warp2_j0]
     res2_i1j0 = img[warp2_i1, warp2_j0]
@@ -49,6 +45,10 @@ def warp_img(img, motion_vector, padding_value=0):
 
     height, width = img.shape[0], img.shape[1]
 
+    img_padded = np.pad(img, ((1, 1), (1, 1), (0, 0)), constant_values=padding_value)
+    mv_padded = np.pad(motion_vector, ((1, 1), (1, 1), (0, 0)), constant_values=0)
+
+
     flat_index = np.arange(height*width)
     i = flat_index // width
     j = flat_index - i * width
@@ -75,12 +75,12 @@ def warp_img(img, motion_vector, padding_value=0):
     # ↓
     # keep in mind with that
 
-    warp_i = i + motion_vector[i, j, 1]
-    warp_j = j - motion_vector[i, j, 0]
+    warp_i = i + mv_padded[i, j, 1]
+    warp_j = j - mv_padded[i, j, 0]
 
     weight_list, warp_list = cal_warp_index_weight([warp_i, warp_j], height, width)
 
-    warpped_img = Linear_Warp(img, warp_list, weight_list, padding_value)
+    warpped_img = Linear_Warp(img_padded, height, width, warp_list, weight_list)
 
     return warpped_img
 
