@@ -17,7 +17,7 @@ Stencil_Only = False
 Normal_Only = False
 WorldPos_Only = False
 Warp_Only = True
-DEBUG_OCC = False
+DEBUG_OCC = True
 DEBUG_MV = True
 
 WARP_NUM = 5
