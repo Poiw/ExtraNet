@@ -1,5 +1,42 @@
 import numpy as np
 
+normal_hole_threshold = 0.98
+worldPosition_hole_threshold_params = (7.5, 45, 50)
+
+
+def lerp(a, b, alpha):
+    return a * alpha + b * (1 - alpha)
+
+def merge_by_max(matrix0, matrix1):
+    res = np.zeros([matrix0.shape[0], matrix0.shape[1]]).astype(np.float32)
+    res[matrix0 > matrix1] = matrix0[matrix0 > matrix1]
+    res[matrix1 >= matrix0] = matrix1[matrix1 >= matrix0]
+    return res
+
+def min_world_pos_distance(worldPos_previous, worldPos_now, height, width, warp_list):
+
+    warp2_i0, warp2_j0, warp2_i1, warp2_j1 = warp_list
+
+    warp_i0j0 = worldPos_previous[warp2_i0, warp2_j0]
+    warp_i0j1 = worldPos_previous[warp2_i0, warp2_j1]
+    warp_i1j0 = worldPos_previous[warp2_i1, warp2_j0]
+    warp_i1j1 = worldPos_previous[warp2_i1, warp2_j1]
+
+    warp_i0j0 = warp_i0j0.reshape((height, width, 3)).astype(np.float32)
+    warp_i0j1 = warp_i0j1.reshape((height, width, 3)).astype(np.float32)
+    warp_i1j0 = warp_i1j0.reshape((height, width, 3)).astype(np.float32)
+    warp_i1j1 = warp_i1j1.reshape((height, width, 3)).astype(np.float32)
+
+    distance00 = np.sqrt(np.square(warp_i0j0 - worldPos_now).sum(axis=-1, keepdims=True)).reshape((height, width)).astype(np.float32)
+    distance01 = np.sqrt(np.square(warp_i0j1 - worldPos_now).sum(axis=-1, keepdims=True)).reshape((height, width)).astype(np.float32)
+    distance10 = np.sqrt(np.square(warp_i1j0 - worldPos_now).sum(axis=-1, keepdims=True)).reshape((height, width)).astype(np.float32)
+    distance11 = np.sqrt(np.square(warp_i1j1 - worldPos_now).sum(axis=-1, keepdims=True)).reshape((height, width)).astype(np.float32)
+
+    res = merge_by_max(distance00, distance01)
+    res = merge_by_max(res, distance10)
+    res = merge_by_max(res, distance11)
+    return res
+
 
 def Linear_Warp(img, height, width, warp_list, weight_list):
 
@@ -41,11 +78,11 @@ def cal_warp_index_weight(warp_index, max_height, max_width):
     return [weight_i0, weight_i1, weight_j0, weight_j1], [warp_i0, warp_i1, warp_j0, warp_j1]
 
 
-def warp_img(img, motion_vector, padding_value=0):
+def warp_img(img, motion_vector):
 
     height, width = img.shape[0], img.shape[1]
 
-    img_padded = np.pad(img, ((1, 1), (1, 1), (0, 0)), constant_values=padding_value)
+    img_padded = np.pad(img, ((1, 1), (1, 1), (0, 0)), constant_values=-10.0)
     mv_padded = np.pad(motion_vector, ((1, 1), (1, 1), (0, 0)), constant_values=0)
 
 
@@ -82,8 +119,93 @@ def warp_img(img, motion_vector, padding_value=0):
 
     warpped_img = Linear_Warp(img_padded, height, width, warp_list, weight_list)
 
+    warpped_img[warpped_img < 0] = -1
+
     return warpped_img
 
 
+def warp_img_with_hole(img, motion_vector, normal_pair, stencil_pair, worldPosition_pair, depth, NoV):
+
+    height, width = img.shape[0], img.shape[1]
+
+    normal_previous, normal_now = normal_pair
+    stencil_previous, stencil_now = stencil_pair
+    worldPosition_previous, worldPosition_now = worldPosition_pair
+
+    normal_previous = np.pad(normal_previous, ((1, 1), (1, 1), (0, 0)), constant_value=0)
+    stencil_previous = np.pad(stencil_previous, ((1, 1), (1, 1), (0, 0)), constant_value=0)
+    worldPosition_previous = np.pad(worldPosition_previous, ((1, 1), (1, 1), (0, 0)), constant_values=1e5)
+
+    img_padded = np.pad(img, ((1, 1), (1, 1), (0, 0)), constant_values=-10.0)
+    mv_padded = np.pad(motion_vector, ((1, 1), (1, 1), (0, 0)), constant_values=0)
 
 
+    flat_index = np.arange(height*width)
+    i = flat_index // width
+    j = flat_index - i * width
+
+    # Because we will pad original image in warp
+    i += 1
+    j += 1
+
+    # motion vector record the change in SCREEN SPACE! and indexed by XY!
+    # ↑
+    # ↑
+    # ↑
+    # ↑
+    # ↑
+    # ↑
+    # ↑ → → → → → → → →
+    # when we index the array by i, j the space is like that
+    # ↓ → → → → → → → →
+    # ↓
+    # ↓
+    # ↓
+    # ↓
+    # ↓
+    # ↓
+    # keep in mind with that
+
+    warp_i = i + mv_padded[i, j, 1]
+    warp_j = j - mv_padded[i, j, 0]
+
+    weight_list, warp_list = cal_warp_index_weight([warp_i, warp_j], height, width)
+
+    warpped_img = Linear_Warp(img_padded, height, width, warp_list, weight_list)
+    warpped_img[warpped_img < 0] = -1
+
+    normal_warp = Linear_Warp(normal_previous, height, width, warp_list, weight_list)
+    stencil_warp = Linear_Warp(stencil_previous, height, width, warp_list, weight_list)
+
+
+     # moving actor
+    normal_warp_length = np.sqrt(np.square(normal_warp).sum(axis=-1, keepdims=True)).repeat(3, axis=-1)
+    normal_now_length = np.sqrt(np.square(normal_now).sum(axis=-1, keepdims=True)).repeat(3, axis=-1)
+
+
+    normal_warp /= (normal_warp_length + 1e-5)
+    cos_normal = (normal_warp * normal_now).sum(axis=-1, keepdims=True).repeat(3, axis=-1)
+    # normal difference
+    normal_difference = cos_normal < normal_hole_threshold
+    # false only when both are zero
+    empty = np.logical_or(normal_warp_length != 0, normal_now_length != 0)
+    normal_difference = np.logical_and(normal_difference, empty)
+    b_moving_actor = stencil_warp != 0
+    moving_actor_hole = np.logical_and(normal_difference, b_moving_actor)
+
+    # static actor
+    bias = lerp(worldPosition_hole_threshold_params[0], worldPosition_hole_threshold_params[1], np.abs(NoV[:, :, 0])) + depth[:, :, 0] * worldPosition_hole_threshold_params[2]
+    world_position_distance = min_world_pos_distance(worldPosition_previous, worldPosition_now, height, width, warp_list)
+    world_position_diff = (world_position_distance > bias).repeat(3, axis=-1).reshape(height, width, 3)
+    b_static_actor = stencil_warp == 0
+    static_disocc = np.logical_and(world_position_diff, b_static_actor)
+
+    # hole for moving actor
+    mesh_minus = np.abs(stencil_warp - stencil_now).sum(axis=-1, keepdims=True).repeat(3, axis=-1)
+    mesh_hole = mesh_minus > 1
+
+    # hole = np.logical_or(normal_difference, disocc, mesh_diff)
+    hole = np.logical_or(static_disocc, mesh_hole)
+    hole = np.logical_or(hole, moving_actor_hole)
+
+    return warpped_img, hole
