@@ -3,14 +3,12 @@ import numpy as np
 import os
 import math
 from os.path import join as pjoin
-import cv2 as cv
-cv.setNumTthreads(0)
 from tqdm import tqdm
 from glob import glob
 import imageio
-import torch.nn.functional as F
 
 import toolFuncs
+
 
 
 def depth_preprocess(depth):
@@ -31,6 +29,15 @@ class DataDirInfo():
 
         self.data_dir = path
         self.data_name = name
+        self.index_list = []
+
+        files = glob(pjoin(self.data_dir, "OCCDebug", "OCCMotionVector*.1.exr"))
+        for file_path in files:
+            file_name = os.path.basename(file_path)
+            idx = int(file_name.split('.')[0][-4:])
+            self.index_list.append(idx)
+
+        self.index_list.sort()
 
         ####################### Supported prefix ###############################
         # PreTonemapHDRColor
@@ -50,7 +57,10 @@ class DataDirInfo():
 
         #########################################################################
 
-    def getPath(self, Prefix, index):
+    def __len__(self):
+        return len(self.index_list)
+
+    def getPath(self, Prefix, index, offset=0):
 
         if Prefix not in [ "PreTonemapHDRColor" ,
                             "MotionVector"      ,
@@ -68,11 +78,11 @@ class DataDirInfo():
             raise NotImplementedError("The prefix type is unknown.")
 
         if Prefix == "OccMotionVector":
-            return pjoin(self.data_dir, "OCCDebug", "OCCMotionVector{:04d}.1.exr".format(index))
+            return pjoin(self.data_dir, "OCCDebug", "OCCMotionVector{:04d}.1.exr".format(self.index_list[index] - offset))
         elif Prefix == "HighResoTAAPreTonemapHDRColor":
-            return pjoin(self.data_dir, "HighResoTAA", "{}PreTonemapHDRColor.{}.exr".format(self.data_name, index))
+            return pjoin(self.data_dir, "HighResoTAA", "{}PreTonemapHDRColor.{}.exr".format(self.data_name, self.index_list[index] - offset))
         else:
-            return pjoin(self.data_dir, "{}{}.{}.exr".format(self.data_name, Prefix, index))
+            return pjoin(self.data_dir, "{}{}.{}.exr".format(self.data_name, Prefix, self.index_list[index] - offset))
 
     def getChannel(self, Prefix):
 
@@ -124,7 +134,7 @@ class extraSS_Dataset(torch.utils.data.Dataset):
 
                 channel = self.data_info.getChannel(unwarpped_key)
 
-                unwarpped_img = imageio.imread(self.data_info.getPath(unwarpped_key, index))[..., :channel]
+                unwarpped_img = imageio.imread(self.data_info.getPath(unwarpped_key, index, 1))[..., :channel]
 
 
                 if "occ" in key:
