@@ -29,9 +29,9 @@ parser.add_argument('--data_name', type=str, default='Bunker', help='data name')
 parser.add_argument('--log_dir', type=str, default='E:\\Data\\Logs', help='saving dir')
 parser.add_argument('--info', type=str, default='', help='short description')
 
-parser.add_argument('--num_works', type=int, default=4, help='data loading threads')
+parser.add_argument('--num_works', type=int, default=8, help='data loading threads')
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
-parser.add_argument('--bz', type=int, default=2, help='batch size')
+parser.add_argument('--bz', type=int, default=4, help='batch size')
 
 parser.add_argument('--vis_step', type=int, default=100, help="add to tensorboard frequency")
 
