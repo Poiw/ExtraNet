@@ -101,7 +101,7 @@ class DataDirInfo():
                             "HighResoTAAPreTonemapHDRColor"]:
             raise NotImplementedError("The prefix type is unknown.")
 
-        if Prefix in ["Metallic", "Roughness", "SceneDepth"]:
+        if Prefix in ["Metallic", "Roughness", "Specular", "MyStencil", "NoV", "SceneDepth"]:
             return 1
         else:
             return 3

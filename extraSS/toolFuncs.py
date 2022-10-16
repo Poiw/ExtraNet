@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 
 normal_hole_threshold = 0.98
 worldPosition_hole_threshold_params = (7.5, 45, 50)
@@ -209,3 +210,28 @@ def warp_img_with_hole(img, motion_vector, normal_pair, stencil_pair, worldPosit
     hole = np.logical_or(hole, moving_actor_hole)
 
     return warpped_img, hole
+
+
+def Process_Input(data):
+
+    extras = {}
+
+    occWarp_img = data["occ-warp_PreTonemapHDRColor"]
+    depth = data["SceneDepth"]
+    metallic = data["Metallic"]
+    roughness = data["roughness"]
+    basecolor = data["BaseColor"]
+    normal = data["WorldNormal"]
+    specular = data["Specular"]
+
+    input = torch.cat([occWarp_img, depth, metallic, roughness, basecolor, normal, specular], dim=1)
+
+    mask = torch.zeros_like(occWarp_img)
+    mask[occWarp_img < 0] = 0
+    mask[occWarp_img >= 0] = 1
+
+    extras["mask"] = mask
+
+    gt = data["PreToneampHDRColor"]
+
+    return input, extras, gt
