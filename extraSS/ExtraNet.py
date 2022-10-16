@@ -212,7 +212,7 @@ class ExtraNet_noHistory(nn.Module):
         self.down2 = DownLWGated(24, 32)
         self.down3 = DownLWGated(32, 32)
         
-        self.up1 = Up(32, 32)
+        self.up1 = Up(64, 32)
         self.up2 = Up(56, 24)
         self.up3 = Up(48, 24)
         self.outc = nn.Conv2d(24, n_classes, kernel_size=1)

@@ -16,6 +16,8 @@ def depth_preprocess(depth):
     depth[depth > 100] = 0.0
     depth = (depth - depth.min()) / (depth.max() - depth.min() + 1e-6)
 
+    return depth
+
 
 Preprocessing_funcs = {}
 Preprocessing_funcs["SceneDepth"] = depth_preprocess
@@ -80,9 +82,9 @@ class DataDirInfo():
         if Prefix == "OccMotionVector":
             return pjoin(self.data_dir, "OCCDebug", "OCCMotionVector{:04d}.1.exr".format(self.index_list[index] - offset))
         elif Prefix == "HighResoTAAPreTonemapHDRColor":
-            return pjoin(self.data_dir, "HighResoTAA", "{}PreTonemapHDRColor.{}.exr".format(self.data_name, self.index_list[index] - offset))
+            return pjoin(self.data_dir, "HighResoTAA", "{}PreTonemapHDRColor.{:04d}.exr".format(self.data_name, self.index_list[index] - offset))
         else:
-            return pjoin(self.data_dir, "{}{}.{}.exr".format(self.data_name, Prefix, self.index_list[index] - offset))
+            return pjoin(self.data_dir, "{}{}.{:04d}.exr".format(self.data_name, Prefix, self.index_list[index] - offset))
 
     def getChannel(self, Prefix):
 
@@ -134,20 +136,20 @@ class extraSS_Dataset(torch.utils.data.Dataset):
 
                 channel = self.data_info.getChannel(unwarpped_key)
 
-                unwarpped_img = imageio.imread(self.data_info.getPath(unwarpped_key, index, 1))[..., :channel]
+                unwarpped_img = imageio.imread(self.data_info.getPath(unwarpped_key, index, 1), "exr")[..., :channel]
 
 
                 if "occ" in key:
-                    motion_vector = imageio.imread(self.data_info.getPath("OccMotionVector", index))[..., :2]
+                    motion_vector = imageio.imread(self.data_info.getPath("OccMotionVector", index), "exr")[..., :2]
                 else:
-                    motion_vector = imageio.imread(self.data_info.getPath('MotionVector', index))[..., :2]
+                    motion_vector = imageio.imread(self.data_info.getPath('MotionVector', index), "exr")[..., :2]
 
                 data[key] = toolFuncs.warp_img(unwarpped_img, motion_vector)
 
 
             else:
                 channel = self.data_info.getChannel(key)
-                data[key] = imageio.imread(self.data_info.get_path(key, index))[..., :channel]
+                data[key] = imageio.imread(self.data_info.getPath(key, index), "exr")[..., :channel]
 
         for preprocess_key in Preprocessing_funcs:
             if preprocess_key in data:

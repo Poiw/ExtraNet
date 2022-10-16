@@ -16,7 +16,7 @@ def merge_by_max(matrix0, matrix1):
 
 def min_world_pos_distance(worldPos_previous, worldPos_now, height, width, warp_list):
 
-    warp2_i0, warp2_j0, warp2_i1, warp2_j1 = warp_list
+    warp2_i0, warp2_i1, warp2_j0, warp2_j1 = warp_list
 
     warp_i0j0 = worldPos_previous[warp2_i0, warp2_j0]
     warp_i0j1 = worldPos_previous[warp2_i0, warp2_j1]
@@ -41,7 +41,7 @@ def min_world_pos_distance(worldPos_previous, worldPos_now, height, width, warp_
 
 def Linear_Warp(img, height, width, warp_list, weight_list):
 
-    warp2_i0, warp2_j0, warp2_i1, warp2_j1 = warp_list
+    warp2_i0, warp2_i1, warp2_j0, warp2_j1 = warp_list
     weight2_i0, weight2_i1, weight2_j0, weight2_j1 = weight_list
 
     res2_i0j0 = img[warp2_i0, warp2_j0]
@@ -219,7 +219,7 @@ def Process_Input(data):
     occWarp_img = data["occ-warp_PreTonemapHDRColor"]
     depth = data["SceneDepth"]
     metallic = data["Metallic"]
-    roughness = data["roughness"]
+    roughness = data["Roughness"]
     basecolor = data["BaseColor"]
     normal = data["WorldNormal"]
     specular = data["Specular"]
@@ -232,6 +232,6 @@ def Process_Input(data):
 
     extras["mask"] = mask
 
-    gt = data["PreToneampHDRColor"]
+    gt = data["PreTonemapHDRColor"]
 
     return input, extras, gt

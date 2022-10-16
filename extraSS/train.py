@@ -7,6 +7,7 @@ import torch.nn as nn
 from torch.utils.tensorboard import SummaryWriter   
 from torch.utils.data import DataLoader
 import os
+import shutil
 import numpy as np
 from tqdm import tqdm
 import argparse
@@ -61,7 +62,7 @@ def train():
     with open(pjoin(saving_dir, 'args.txt'), 'w') as f:
         for arg in vars(args):
             f.write('{}: {}\n'.format(arg, getattr(args, arg)))
-    os.system("cp config.py {}".format(saving_dir))
+    shutil.copyfile("config.py", pjoin("{}".format(saving_dir), "config.py"))
         
     ##################################### Tensorboard Inforamtion ###############################
     writer = SummaryWriter(board_log_path)
@@ -69,12 +70,12 @@ def train():
     #############################################################################################
 
     ######################### Network Archtecture #############################
-    model = ExtraNet.ExtraNet_noHistory(args.input_channel, args.output_channel)
+    model = ExtraNet.ExtraNet_noHistory(args.input_channels, args.output_channels)
     model.cuda()
     ###########################################################################
 
     # Optimizer
-    optimizer = torch.optim.Adam(model.parameters, lr = args.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr = args.lr)
 
 
     # DataLoader
