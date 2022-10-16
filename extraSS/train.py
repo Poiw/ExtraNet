@@ -33,10 +33,10 @@ parser.add_argument('--num_works', type=int, default=8, help='data loading threa
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
 parser.add_argument('--bz', type=int, default=4, help='batch size')
 
-parser.add_argument('--vis_step', type=int, default=100, help="add to tensorboard frequency")
+parser.add_argument('--vis_step', type=int, default=5, help="add to tensorboard frequency")
 
-parser.add_argument('--saving_epoch', type=int, default=40, help='saving steps')
-parser.add_argument('--total_epoch', type=int, default=1000, help='total steps')
+parser.add_argument('--saving_epoch', type=int, default=10, help='saving steps')
+parser.add_argument('--total_epoch', type=int, default=200, help='total steps')
 
 parser.add_argument('--input_channels', type=int, default=13, help="input channel number")
 parser.add_argument('--output_channels', type=int, default=3, help="output channel number")
