@@ -140,7 +140,10 @@ class extraSS_Dataset(torch.utils.data.Dataset):
 
 
                 if "occ" in key:
-                    motion_vector = imageio.imread(self.data_info.getPath("OccMotionVector", index), "exr")[..., :2]
+                    motion_vector = imageio.imread(self.data_info.getPath("OccMotionVector", index), "exr")[..., :3]
+                    # Use this only when data is not fixed
+                    motion_vector[..., 0] = motion_vector[..., 2]
+                    motion_vector = motion_vector[..., :2]
                 else:
                     motion_vector = imageio.imread(self.data_info.getPath('MotionVector', index), "exr")[..., :2]
 
