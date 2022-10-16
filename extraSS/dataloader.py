@@ -22,7 +22,20 @@ def depth_preprocess(depth):
 Preprocessing_funcs = {}
 Preprocessing_funcs["SceneDepth"] = depth_preprocess
 
-
+Valid_Data_prefix = [ "PreTonemapHDRColor" ,
+                            "demodulatePreTonemapHDRColor",
+                            "MotionVector"      ,
+                            "Specular"          ,
+                            "WorldPosition"     ,
+                            "WorldNormal"       ,
+                            "BaseColor"         ,
+                            "MyStencil"         ,
+                            "Roughness"         ,
+                            "Metallic"          ,
+                            "NoV"               ,
+                            "SceneDepth"        ,
+                            "OccMotionVector"   ,
+                            "HighResoTAAPreTonemapHDRColor"]
 
 class DataDirInfo():
 
@@ -64,43 +77,21 @@ class DataDirInfo():
 
     def getPath(self, Prefix, index, offset=0):
 
-        if Prefix not in [ "PreTonemapHDRColor" ,
-                            "MotionVector"      ,
-                            "Specular"          ,
-                            "WorldPosition"     ,
-                            "WorldNormal"       ,
-                            "BaseColor"         ,
-                            "MyStencil"         ,
-                            "Roughness"         ,
-                            "Metallic"          ,
-                            "NoV"               ,
-                            "SceneDepth"        ,
-                            "OccMotionVector"   ,
-                            "HighResoTAAPreTonemapHDRColor"]:
+        if Prefix not in Valid_Data_prefix:
             raise NotImplementedError("The prefix type is unknown.")
 
         if Prefix == "OccMotionVector":
             return pjoin(self.data_dir, "OCCDebug", "OCCMotionVector{:04d}.1.exr".format(self.index_list[index] - offset))
         elif Prefix == "HighResoTAAPreTonemapHDRColor":
             return pjoin(self.data_dir, "HighResoTAA", "{}PreTonemapHDRColor.{:04d}.exr".format(self.data_name, self.index_list[index] - offset))
+        elif Prefix == "demodulatePreTonemapHDRColor":
+            return pjoin(self.data_dir, "demodulate", "{}PreTonemapHDRColor.{:04d}.exr".format(self.data_name, self.index_list[index] - offset))
         else:
             return pjoin(self.data_dir, "{}{}.{:04d}.exr".format(self.data_name, Prefix, self.index_list[index] - offset))
 
     def getChannel(self, Prefix):
 
-        if Prefix not in [ "PreTonemapHDRColor" ,
-                            "MotionVector"      ,
-                            "Specular"          ,
-                            "WorldPosition"     ,
-                            "WorldNormal"       ,
-                            "BaseColor"         ,
-                            "MyStencil"         ,
-                            "Roughness"         ,
-                            "Metallic"          ,
-                            "NoV"               ,
-                            "SceneDepth"        ,
-                            "OccMotionVector"   ,
-                            "HighResoTAAPreTonemapHDRColor"]:
+        if Prefix not in Valid_Data_prefix:
             raise NotImplementedError("The prefix type is unknown.")
 
         if Prefix in ["Metallic", "Roughness", "Specular", "MyStencil", "NoV", "SceneDepth"]:

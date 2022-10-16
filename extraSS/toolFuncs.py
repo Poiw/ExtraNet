@@ -212,26 +212,69 @@ def warp_img_with_hole(img, motion_vector, normal_pair, stencil_pair, worldPosit
     return warpped_img, hole
 
 
-def Process_Input(data):
+def Process_Input(data, type="color"):
 
     extras = {}
 
-    occWarp_img = data["occ-warp_PreTonemapHDRColor"]
-    depth = data["SceneDepth"]
-    metallic = data["Metallic"]
-    roughness = data["Roughness"]
-    basecolor = data["BaseColor"]
-    normal = data["WorldNormal"]
-    specular = data["Specular"]
+    if type == "color":
 
-    input = torch.cat([occWarp_img, depth, metallic, roughness, basecolor, normal, specular], dim=1)
+        occWarp_img = data["occ-warp_PreTonemapHDRColor"]
+        depth = data["SceneDepth"]
+        metallic = data["Metallic"]
+        roughness = data["Roughness"]
+        basecolor = data["BaseColor"]
+        normal = data["WorldNormal"]
+        specular = data["Specular"]
 
-    mask = torch.zeros_like(occWarp_img)
-    mask[occWarp_img < 0] = 0
-    mask[occWarp_img >= 0] = 1
+        input = torch.cat([occWarp_img, depth, metallic, roughness, basecolor, normal, specular], dim=1)
 
-    extras["mask"] = mask
+        mask = torch.zeros_like(occWarp_img)
+        mask[occWarp_img < 0] = 0
+        mask[occWarp_img >= 0] = 1
 
-    gt = data["PreTonemapHDRColor"]
+        extras["mask"] = mask
+
+        gt = data["PreTonemapHDRColor"]
+
+    elif type == "glossy_shading":
+        occWarp_demodulate_img = data["occ-warp_demodulatePreTonemapHDRColor"]
+        depth = data["SceneDepth"]
+        metallic = data["Metallic"]
+        roughness = data["Roughness"]
+        basecolor = data["BaseColor"]
+        normal = data["WorldNormal"]
+        specular = data["Specular"]
+
+        input = torch.cat([occWarp_demodulate_img, depth, metallic, roughness, basecolor, normal, specular], dim=1)
+
+        mask = torch.zeros_like(occWarp_demodulate_img)
+        mask[occWarp_demodulate_img < 0] = 0
+        mask[occWarp_demodulate_img >= 0] = 1
+
+        extras["mask"] = mask
+
+        gt = data["demodulatePreTonemapHDRColor"]
+
+    else:
+        raise NotImplementedError
 
     return input, extras, gt
+
+def Postprocess(data, pred, type="color"):
+
+    data["pred"] = pred.detach().cpu()
+
+    if type == "color":
+        pass
+
+    elif type == "glossy_shading":
+        
+        img_albedo = data["BaseColor"] + data["Specular"] * 0.08 * ( 1-data["Metallic"] )
+        pred_color = img_albedo * pred
+
+        data["pred_color"] = pred_color
+
+    else:
+        raise NotImplementedError
+
+    return data

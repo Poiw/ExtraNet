@@ -107,7 +107,7 @@ def train():
 
             writer_iter += 1
 
-            input, extras, gt = toolFuncs.Process_Input(data)
+            input, extras, gt = toolFuncs.Process_Input(data, type=config.dataType)
             input = input.cuda()
             gt = gt.cuda()
             for key in extras:
@@ -145,7 +145,7 @@ def train():
                     if val_step == val_times:
                         break
 
-                    input, extras, gt = toolFuncs.Process_Input(data)
+                    input, extras, gt = toolFuncs.Process_Input(data, type=config.dataType)
                     input = input.cuda()
                     gt = gt.cuda()
                     for key in extras:
@@ -155,13 +155,13 @@ def train():
 
                     loss = criterion(pred, extras["mask"].cuda(), gt)
 
+                    data = toolFuncs.Postprocess(data, pred, type=config.dataType)
+
                     val_Loss += loss.item()
 
                     val_saving_subdir = pjoin(val_saving_folder, '{:02d}'.format(val_step))
                     os.makedirs(val_saving_subdir)
 
-                    pred_color_img = utils.tensorToNumpy(pred[0])
-                    utils.save_exr(pred_color_img, pjoin(val_saving_subdir, "Pred.exr"))
                     for key in data:
                         img = utils.tensorToNumpy(data[key][0])
                         utils.save_exr(img, pjoin(val_saving_subdir, "{}.exr".format(key)))
@@ -169,7 +169,19 @@ def train():
                 val_Loss /= val_times
                 writer.add_scalar("val/Loss", val_Loss, writer_iter)
         
+            
+            torch.save({
+                'model' : model.state_dict(),
+                'optimizer' : optimizer.state_dict(),
+                'writer_iter' : writer_iter
+            }, pjoin(val_saving_folder, 'checkpoint.pth'))
 
+            
+            torch.save({
+                'model' : model.state_dict(),
+                'optimizer' : optimizer.state_dict(),
+                'writer_iter' : writer_iter
+            }, pjoin(model_saving_path, 'checkpoint.pth'))
         
 
             

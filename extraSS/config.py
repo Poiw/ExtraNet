@@ -5,8 +5,12 @@ Dataloader_Keys = [ "PreTonemapHDRColor" ,
                     "Roughness"         ,
                     "Metallic"          ,
                     "SceneDepth"        ,
-                    "occ-warp_PreTonemapHDRColor"]
+                    "occ-warp_PreTonemapHDRColor",
+                    "demodulatePreTonemapHDRColor",
+                    "occ-warp_demodulatePreTonemapHDRColor"]
 
 
 mLossHoleArgument = False
 mLossHardArgument = True
+
+dataType = "glossy_shading"
