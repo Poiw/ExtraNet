@@ -157,13 +157,14 @@ def train():
 
                     val_Loss += loss.item()
 
-
+                    val_saving_subdir = pjoin(val_saving_folder, '{:02d}'.format(val_step))
+                    os.makedirs(val_saving_subdir)
 
                     pred_color_img = utils.tensorToNumpy(pred[0])
-                    utils.save_exr(pred_color_img, pjoin(val_saving_folder, "Pred.exr"))
+                    utils.save_exr(pred_color_img, pjoin(val_saving_subdir, "Pred.exr"))
                     for key in data:
-                        img = utils.tensorToNumpy(data[key])
-                        utils.save_exr(img, pjoin(val_saving_folder, "{}.exr".format(key)))
+                        img = utils.tensorToNumpy(data[key][0])
+                        utils.save_exr(img, pjoin(val_saving_subdir, "{}.exr".format(key)))
 
                 val_Loss /= val_times
                 writer.add_scalar("val/Loss", val_Loss, writer_iter)
