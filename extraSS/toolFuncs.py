@@ -262,19 +262,23 @@ def Process_Input(data, type="color"):
 
 def Postprocess(data, pred, type="color"):
 
-    data["pred"] = pred.detach().cpu()
+    with torch.no_grad():
 
-    if type == "color":
-        pass
+        pred = pred.detach().cpu()
+        data["pred"] = pred
 
-    elif type == "glossy_shading":
-        
-        img_albedo = data["BaseColor"] + data["Specular"] * 0.08 * ( 1-data["Metallic"] )
-        pred_color = img_albedo * pred
+        if type == "color":
+            pass
 
-        data["pred_color"] = pred_color
+        elif type == "glossy_shading":
+            
+            img_albedo = data["BaseColor"] + data["Specular"] * 0.08 * ( 1-data["Metallic"] )
+            img_albedo = img_albedo.detach().cpu()
+            pred_color = img_albedo * pred
 
-    else:
-        raise NotImplementedError
+            data["pred_color"] = pred_color
+
+        else:
+            raise NotImplementedError
 
     return data
