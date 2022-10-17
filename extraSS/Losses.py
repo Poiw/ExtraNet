@@ -11,7 +11,7 @@ class LossHoleArgument(nn.Module):
 
     def forward(self, input, mask, target):
         lossMask = 1 - mask[:,:3,:,:]
-        lholeAugment = ( lossMask * torch.abs(input-target) ).sum() / lossMask.sum()
+        lholeAugment = ( lossMask * torch.abs(input-target) ).sum() / ( lossMask.sum() + 30 )
         return lholeAugment
 
 class LossHardArgument(nn.Module):
