@@ -213,7 +213,7 @@ def warp_img_with_hole(img, motion_vector, normal_pair, stencil_pair, worldPosit
     return warpped_img, hole
 
 
-def Process_Input(data, type="color"):
+def Process_Input(data, type="color", ss_only_flag=False):
 
     extras = {}
 
@@ -268,6 +268,9 @@ def Process_Input(data, type="color"):
         if config.SS_only_ratio > 0:
             if np.random.rand() < config.SS_only_ratio:
                 data["occ-warp_demodulatePreTonemapHDRColor"] = data["demodulatePreTonemapHDRColor"]
+        if ss_only_flag:
+                data["occ-warp_demodulatePreTonemapHDRColor"] = data["demodulatePreTonemapHDRColor"]
+
         occWarp_demodulate_img = data["occ-warp_demodulatePreTonemapHDRColor"]
 
         depth = data["SceneDepth"]

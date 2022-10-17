@@ -17,7 +17,7 @@ mLossHardArgument = True
 
 dataType = "SS-glossy_shading"
 
-SS_only_ratio = 0.3
+SS_only_ratio = -1
 
 loss_func_name = "Multireso_mLoss"
 
