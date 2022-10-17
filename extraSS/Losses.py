@@ -46,7 +46,7 @@ class Multireso_mLoss(nn.Module):
         self.low_w = low_weight
         self.high_w = high_weight
         
-    def forward(self, input, mask, target):
+    def forward(self, input, extras, target):
 
         low_pred = input["low"]
         high_pred = input["high"]
@@ -54,7 +54,8 @@ class Multireso_mLoss(nn.Module):
         low_gt = target["low"]
         high_gt = target["high"]
 
-        low_loss = self.mLoss(low_pred, mask, low_gt)
-        high_loss = l1Loss(high_pred, high_gt)
+        low_loss = self.mLoss(low_pred, extras["mask"], low_gt)
+        high_loss = self.mLoss(high_pred, extras["high_mask"], high_gt)
+        # high_loss = l1Loss(high_pred, high_gt)
 
         return self.low_w * low_loss + self.high_w * high_loss

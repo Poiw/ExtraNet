@@ -285,6 +285,12 @@ def Process_Input(data, type="color"):
         mask[occWarp_demodulate_img >= 0] = 1
 
         extras["mask"] = mask
+        
+        high_mask = torch.zeros_like(high_input)
+        high_mask[high_input < 0] = 0
+        high_mask[high_input >= 0] = 1
+
+        extras["high_mask"] = high_mask
 
         gt = {"low" : data["PreTonemapHDRColor"].cuda(), "high" : data["HighResoTAAPreTonemapHDRColor"].cuda()}
         input = {"low" : low_input, "high" : high_input}
@@ -324,3 +330,18 @@ def Postprocess(data, pred, type="color"):
             raise NotImplementedError
 
     return data
+
+def getL1(pred, data, type="color"):
+
+    if type == "SS-glossy_shading":
+        low_pred = pred["low"].detach().cpu()
+        high_pred = pred["high"].detach().cpu()
+
+        low_gt = data["PreTonemapHDRColor"].detach().cpu()
+        high_gt = data["HighResoTAAPreTonemapHDRColor"].detach().cpu()
+
+        return torch.abs(low_pred-low_gt).mean(), torch.abs(high_pred-high_gt).mean()
+
+    else:
+        raise NotImplementedError
+
