@@ -234,3 +234,85 @@ class ExtraNet_noHistory(nn.Module):
         if self.skip:
             logits = logits + input[:, 0:3, :, :]
         return logits
+
+
+
+class ExtraNet_demodulate_noHistory_SS(nn.Module):
+    # a tinyer Unet which only has 3 downsample pass
+    def __init__(self, n_channels, n_classes, demodulate_type="glossy", upsample="bilinear", skip=True):
+        super(ExtraNet_demodulate_noHistory_SS, self).__init__()
+        self.n_channels = n_channels
+        self.n_classes = n_classes
+        self.upsample = upsample
+        self.skip = skip
+        self.demodulate_type = demodulate_type
+
+
+        self.lowlevelGated = LWGatedConv2D(32*3, 32, kernel_size=3, stride=1, pad=1)
+
+        self.conv1 = LWGatedConv2D(n_channels, 24, kernel_size=3, stride=1, pad=1)
+        self.bn1 = nn.BatchNorm2d(24)
+        self.relu1 = nn.ReLU(inplace=True)
+        self.conv2 = LWGatedConv2D(24, 24, kernel_size=3, stride=1, pad=1)
+        self.bn2 = nn.BatchNorm2d(24)
+        self.relu2 = nn.ReLU(inplace=True)
+        self.down1 = DownLWGated(24, 24)
+        self.down2 = DownLWGated(24, 32)
+        self.down3 = DownLWGated(32, 32)
+        
+        self.up1 = Up(64, 32)
+        self.up2 = Up(56, 24)
+        self.up3 = Up(48, 24)
+        self.outc = nn.Conv2d(24, n_classes, kernel_size=1)
+
+        self.upsampler = nn.Upsample(scale_factor=2, mode=self.upsample)
+        self.ss_conv1 = nn.Conv2d(30, 16, kernel_size=3, stride=1, padding=1)
+        self.bn3 = nn.BatchNorm2d(16)
+        self.relu3 = nn.ReLU(inplace=True)
+        self.ss_conv2 = nn.Conv2d(16, n_classes, kernel_size=1)
+        self.relu4 = nn.ReLU(inplace=True)
+
+    def forward(self, input):
+
+        low_input = input["low"]
+        high_input = input["high"]
+
+        basecolor = low_input[:, 3:6, ...]
+        metallic = low_input[:, 6:7, ...]
+        specular = low_input[:, 7:8, ...]
+
+        x1 = self.conv1(low_input)
+        x1 = self.relu1(self.bn1(x1))
+        x1 = self.conv2(x1)
+        x1 = self.relu2(self.bn2(x1))
+
+        x2 = self.down1(x1)
+        x3 = self.down2(x2)
+        x4 = self.down3(x3)
+
+        res = self.up1(x4, x3)
+        res = self.up2(res, x2)
+        res = self.up3(res, x1)
+        logits = self.outc(res)
+        if self.skip:
+            lowreso_shading = logits + low_input[:, 0:3, :, :]
+
+        if self.demodulate_type == 'glossy':
+            lowreso_color = lowreso_shading * ( basecolor + specular * 0.08 * (1-metallic) )
+        else:
+            lowreso_color = lowreso_shading * basecolor
+
+        feature_block = torch.cat([lowreso_color, res], dim=1)
+        feature_block = self.upsampler(feature_block)
+
+        out = self.ss_conv1(torch.cat([high_input, feature_block], dim=1))
+        out = self.relu3(self.bn3(out))
+        out = self.ss_conv2(out)
+        highreso_color = self.relu4(out)
+
+        output = {
+            "low" : lowreso_color,
+            "high" : highreso_color
+        }
+        
+        return output

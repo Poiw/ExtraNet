@@ -1,5 +1,6 @@
 import numpy as np
 import torch
+import config
 
 normal_hole_threshold = 0.98
 worldPosition_hole_threshold_params = (7.5, 45, 50)
@@ -236,6 +237,9 @@ def Process_Input(data, type="color"):
 
         gt = data["PreTonemapHDRColor"]
 
+        input = input.cuda()
+        gt = gt.cuda()
+
     elif type == "glossy_shading":
         occWarp_demodulate_img = data["occ-warp_demodulatePreTonemapHDRColor"]
         depth = data["SceneDepth"]
@@ -254,6 +258,36 @@ def Process_Input(data, type="color"):
         extras["mask"] = mask
 
         gt = data["demodulatePreTonemapHDRColor"]
+        
+        input = input.cuda()
+        gt = gt.cuda()
+
+    elif type == "SS-glossy_shading":
+
+        # mixed training ss only and extra+ss
+        if config.SS_only_ratio > 0:
+            if np.random.rand() < config.SS_only_ratio:
+                data["occ-warp_demodulatePreTonemapHDRColor"] = data["demodulatePreTonemapHDRColor"]
+        occWarp_demodulate_img = data["occ-warp_demodulatePreTonemapHDRColor"]
+
+        depth = data["SceneDepth"]
+        metallic = data["Metallic"]
+        roughness = data["Roughness"]
+        basecolor = data["BaseColor"]
+        normal = data["WorldNormal"]
+        specular = data["Specular"]
+
+        low_input = torch.cat([occWarp_demodulate_img, basecolor, metallic, specular, depth, roughness, normal], dim=1).cuda()
+        high_input = data["occ-warp_HighResoTAAPreTonemapHDRColor"].cuda()
+
+        mask = torch.zeros_like(occWarp_demodulate_img)
+        mask[occWarp_demodulate_img < 0] = 0
+        mask[occWarp_demodulate_img >= 0] = 1
+
+        extras["mask"] = mask
+
+        gt = {"low" : data["PreTonemapHDRColor"].cuda(), "high" : data["HighResoTAAPreTonemapHDRColor"].cuda()}
+        input = {"low" : low_input, "high" : high_input}
 
     else:
         raise NotImplementedError
@@ -264,19 +298,27 @@ def Postprocess(data, pred, type="color"):
 
     with torch.no_grad():
 
-        pred = pred.detach().cpu()
-        data["pred"] = pred
 
         if type == "color":
+            pred = pred.detach().cpu()
+            data["pred"] = pred
             pass
 
         elif type == "glossy_shading":
             
+            pred = pred.detach().cpu()
+            data["pred"] = pred
+
             img_albedo = data["BaseColor"] + data["Specular"] * 0.08 * ( 1-data["Metallic"] )
             img_albedo = img_albedo.detach().cpu()
             pred_color = img_albedo * pred
 
             data["pred_color"] = pred_color
+
+        elif type == "SS-glossy_shading":
+
+            data["low_pred"] = pred["low"].detach().cpu()
+            data["high_pred"] = pred["high"].detach().cpu()
 
         else:
             raise NotImplementedError

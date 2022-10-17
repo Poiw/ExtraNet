@@ -70,7 +70,12 @@ def train():
     #############################################################################################
 
     ######################### Network Archtecture #############################
-    model = ExtraNet.ExtraNet_noHistory(args.input_channels, args.output_channels)
+    if config.network_type == "ExtraNet_noHistory":
+        model = ExtraNet.ExtraNet_noHistory(args.input_channels, args.output_channels)
+    elif config.network_type == "ExtraNet_demodulate_noHistory_SS":
+        model = ExtraNet.ExtraNet_demodulate_noHistory_SS(args.input_channels, args.output_channels)
+    else:
+        raise NotImplementedError
     model.cuda()
     ###########################################################################
 
@@ -97,7 +102,12 @@ def train():
 
 
     # Loss Functions
-    criterion = Losses.mLoss()
+    if config.loss_func_name == "mLoss":
+        criterion = Losses.mLoss()
+    elif config.loss_func_name == "Multireso_mLoss":
+        criterion = Losses.Multireso_mLoss()
+    else:
+        raise NotImplementedError
 
     for e in tqdm(range(args.total_epoch)):
 
@@ -108,8 +118,6 @@ def train():
             writer_iter += 1
 
             input, extras, gt = toolFuncs.Process_Input(data, type=config.dataType)
-            input = input.cuda()
-            gt = gt.cuda()
             for key in extras:
                 extras[key] = extras[key].cuda()
 
@@ -146,8 +154,6 @@ def train():
                         break
 
                     input, extras, gt = toolFuncs.Process_Input(data, type=config.dataType)
-                    input = input.cuda()
-                    gt = gt.cuda()
                     for key in extras:
                         extras[key] = extras[key].cuda()
 
