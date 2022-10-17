@@ -8,7 +8,7 @@ from glob import glob
 import imageio
 
 import toolFuncs
-
+from scipy import interpolate
 
 
 def depth_preprocess(depth):
@@ -138,7 +138,40 @@ class extraSS_Dataset(torch.utils.data.Dataset):
                 else:
                     motion_vector = imageio.imread(self.data_info.getPath('MotionVector', index), "exr")[..., :2]
 
+                # Reference: https://stackoverflow.com/questions/41879104/upsample-and-interpolate-a-numpy-array
+                if motion_vector.shape[0] != unwarpped_img.shape[0] or motion_vector.shape[1] != unwarpped_img.shape[1]:
+
+                    ratio_x = (unwarpped_img.shape[1] / motion_vector.shape[1])
+                    ratio_y = (unwarpped_img.shape[0] / motion_vector.shape[0])
+
+                    motion_vector[..., 1] = motion_vector[..., 1] * ratio_y
+                    motion_vector[..., 0] = motion_vector[..., 0] * ratio_x
+
+                    x = np.array(range(motion_vector.shape[1]))
+                    y = np.array(range(motion_vector.shape[0]))
+
+                    mv_x_f = interpolate.interp2d(x, y, motion_vector[..., 0])
+                    mv_y_f = interpolate.interp2d(x, y, motion_vector[..., 1])
+
+                    xnew = (np.array(range(unwarpped_img.shape[1])) - 0.5) / ratio_x
+                    ynew = (np.array(range(unwarpped_img.shape[0])) - 0.5) / ratio_y
+
+                    mv_x = mv_x_f(xnew, ynew)
+                    mv_y = mv_y_f(xnew, ynew)
+
+                    motion_vector = np.stack([mv_x, mv_y], axis=2)
+
                 data[key] = toolFuncs.warp_img(unwarpped_img, motion_vector)
+
+
+            elif "previous" in key:
+                original_key = key.split('_')[-1]
+
+                channel = self.data_info.getChannel(original_key)
+
+                previous_img = imageio.imread(self.data_info.getPath(original_key, index, 1), "exr")[..., :channel]
+
+                data[key] = previous_img
 
 
             else:
