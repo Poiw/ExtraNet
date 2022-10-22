@@ -38,9 +38,6 @@ parser.add_argument('--vis_step', type=int, default=5, help="add to tensorboard 
 parser.add_argument('--saving_epoch', type=int, default=10, help='saving steps')
 parser.add_argument('--total_epoch', type=int, default=200, help='total steps')
 
-parser.add_argument('--input_channels', type=int, default=13, help="input channel number")
-parser.add_argument('--output_channels', type=int, default=3, help="output channel number")
-
 
 args = parser.parse_args()
 
@@ -71,9 +68,11 @@ def train():
 
     ######################### Network Archtecture #############################
     if config.network_type == "ExtraNet_noHistory":
-        model = ExtraNet.ExtraNet_noHistory(args.input_channels, args.output_channels)
+        model = ExtraNet.ExtraNet_noHistory(config.input_channels, config.output_channels)
     elif config.network_type == "ExtraNet_demodulate_noHistory_SS":
-        model = ExtraNet.ExtraNet_demodulate_noHistory_SS(args.input_channels, args.output_channels)
+        model = ExtraNet.ExtraNet_demodulate_noHistory_SS(config.input_channels, config.output_channels)
+    elif config.network_type == "ExtraNet_demodulate_noHistory_SS_blend":
+        model = ExtraNet.ExtraNet_demodulate_noHistory_SS_blend(config.input_channels, config.output_channels)
     else:
         raise NotImplementedError
     model.cuda()
@@ -198,12 +197,6 @@ def train():
                 'writer_iter' : writer_iter
             }, pjoin(model_saving_path, 'checkpoint.pth'))
         
-
-            
-
-
-
-    
 
 
 

@@ -17,8 +17,13 @@ mLossHardArgument = True
 
 dataType = "SS-glossy_shading"
 
-SS_only_ratio = -1
+# train
+SS_only_ratio = 0.3
+# test
+# SS_only_ratio = -1
 
 loss_func_name = "Multireso_mLoss"
 
-network_type = "ExtraNet_demodulate_noHistory_SS"
+network_type = "ExtraNet_demodulate_noHistory_SS_blend"
+input_channels = 13
+output_channels = 3
