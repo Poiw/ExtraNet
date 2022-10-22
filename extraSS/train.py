@@ -31,7 +31,7 @@ parser.add_argument('--info', type=str, default='', help='short description')
 
 parser.add_argument('--num_works', type=int, default=8, help='data loading threads')
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
-parser.add_argument('--bz', type=int, default=4, help='batch size')
+parser.add_argument('--bz', type=int, default=2, help='batch size')
 
 parser.add_argument('--vis_step', type=int, default=5, help="add to tensorboard frequency")
 
