@@ -38,7 +38,7 @@ args = parser.parse_args()
 
 cur_time = time.strftime("%Y-%m-%d-%H-%M-%S", time.localtime())
 
-
+use_last_frame = False
 
 def train():
 
@@ -51,6 +51,8 @@ def train():
         model = ExtraNet.ExtraNet_noHistory(args.input_channels, args.output_channels)
     elif config.network_type == "ExtraNet_demodulate_noHistory_SS":
         model = ExtraNet.ExtraNet_demodulate_noHistory_SS(args.input_channels, args.output_channels)
+    elif config.network_type == "ExtraNet_demodulate_noHistory_SS_blend":
+        model = ExtraNet.ExtraNet_demodulate_noHistory_SS_blend(config.input_channels, config.output_channels)
     else:
         raise NotImplementedError
     model.cuda()
@@ -83,7 +85,7 @@ def train():
             for key in extras:
                 extras[key] = extras[key].cuda()
 
-            if last_output is not None:
+            if last_output is not None and use_last_frame:
                 input["high"] = last_output.cuda()
 
             pred = model(input)
