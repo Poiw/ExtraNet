@@ -35,8 +35,8 @@ parser.add_argument('--bz', type=int, default=2, help='batch size')
 
 parser.add_argument('--vis_step', type=int, default=5, help="add to tensorboard frequency")
 
-parser.add_argument('--saving_epoch', type=int, default=10, help='saving steps')
-parser.add_argument('--total_epoch', type=int, default=200, help='total steps')
+parser.add_argument('--saving_epoch', type=int, default=20, help='saving steps')
+parser.add_argument('--total_epoch', type=int, default=500, help='total steps')
 
 
 args = parser.parse_args()
