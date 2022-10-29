@@ -8,6 +8,7 @@ Dataloader_Keys = [ "PreTonemapHDRColor" ,
                     "Metallic"          ,
                     "SceneDepth"        ,
                     "occ-warp_demodulatePreTonemapHDRColor",
+                    "warp_demodulatePreTonemapHDRColor",
                     "occ-warp_HighResoTAAPreTonemapHDRColor"
                     ]
 

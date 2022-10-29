@@ -278,56 +278,95 @@ def warp_img_with_hole(img, motion_vector, normal_pair, stencil_pair, worldPosit
     return warpped_img, hole
 
 
+
+Upsampler2_Nearest = torch.nn.Upsample(scale_factor=2)
+
 def Process_Input(data, type="color", ss_only_flag=False):
 
     extras = {}
 
-    if type == "color":
+    # if type == "color":
 
-        occWarp_img = data["occ-warp_PreTonemapHDRColor"]
-        depth = data["SceneDepth"]
-        metallic = data["Metallic"]
-        roughness = data["Roughness"]
-        basecolor = data["BaseColor"]
-        normal = data["WorldNormal"]
-        specular = data["Specular"]
+    #     occWarp_img = data["occ-warp_PreTonemapHDRColor"]
+    #     depth = data["SceneDepth"]
+    #     metallic = data["Metallic"]
+    #     roughness = data["Roughness"]
+    #     basecolor = data["BaseColor"]
+    #     normal = data["WorldNormal"]
+    #     specular = data["Specular"]
 
-        input = torch.cat([occWarp_img, depth, metallic, roughness, basecolor, normal, specular], dim=1)
+    #     input = torch.cat([occWarp_img, depth, metallic, roughness, basecolor, normal, specular], dim=1)
 
-        mask = torch.zeros_like(occWarp_img)
-        mask[occWarp_img < 0] = 0
-        mask[occWarp_img >= 0] = 1
+    #     mask = torch.zeros_like(occWarp_img)
+    #     mask[occWarp_img < 0] = 0
+    #     mask[occWarp_img >= 0] = 1
 
-        extras["mask"] = mask
+    #     extras["mask"] = mask
 
-        gt = data["PreTonemapHDRColor"]
+    #     gt = data["PreTonemapHDRColor"]
 
-        input = input.cuda()
-        gt = gt.cuda()
+    #     input = input.cuda()
+    #     gt = gt.cuda()
 
-    elif type == "glossy_shading":
-        occWarp_demodulate_img = data["occ-warp_demodulatePreTonemapHDRColor"]
-        depth = data["SceneDepth"]
-        metallic = data["Metallic"]
-        roughness = data["Roughness"]
-        basecolor = data["BaseColor"]
-        normal = data["WorldNormal"]
-        specular = data["Specular"]
+    # elif type == "glossy_shading":
+    #     occWarp_demodulate_img = data["occ-warp_demodulatePreTonemapHDRColor"]
+    #     depth = data["SceneDepth"]
+    #     metallic = data["Metallic"]
+    #     roughness = data["Roughness"]
+    #     basecolor = data["BaseColor"]
+    #     normal = data["WorldNormal"]
+    #     specular = data["Specular"]
 
-        input = torch.cat([occWarp_demodulate_img, depth, metallic, roughness, basecolor, normal, specular], dim=1)
+    #     input = torch.cat([occWarp_demodulate_img, depth, metallic, roughness, basecolor, normal, specular], dim=1)
 
-        mask = torch.zeros_like(occWarp_demodulate_img)
-        mask[occWarp_demodulate_img < 0] = 0
-        mask[occWarp_demodulate_img >= 0] = 1
+    #     mask = torch.zeros_like(occWarp_demodulate_img)
+    #     mask[occWarp_demodulate_img < 0] = 0
+    #     mask[occWarp_demodulate_img >= 0] = 1
 
-        extras["mask"] = mask
+    #     extras["mask"] = mask
 
-        gt = data["demodulatePreTonemapHDRColor"]
+    #     gt = data["demodulatePreTonemapHDRColor"]
         
-        input = input.cuda()
-        gt = gt.cuda()
+    #     input = input.cuda()
+    #     gt = gt.cuda()
 
-    elif type == "SS-glossy_shading":
+    # elif type == "SS-glossy_shading":
+
+    #     # mixed training ss only and extra+ss
+    #     if config.SS_only_ratio > 0:
+    #         if np.random.rand() < config.SS_only_ratio:
+    #             data["occ-warp_demodulatePreTonemapHDRColor"] = data["demodulatePreTonemapHDRColor"]
+    #     if ss_only_flag:
+    #             data["occ-warp_demodulatePreTonemapHDRColor"] = data["demodulatePreTonemapHDRColor"]
+
+    #     occWarp_demodulate_img = data["occ-warp_demodulatePreTonemapHDRColor"]
+
+    #     depth = data["SceneDepth"]
+    #     metallic = data["Metallic"]
+    #     roughness = data["Roughness"]
+    #     basecolor = data["BaseColor"]
+    #     normal = data["WorldNormal"]
+    #     specular = data["Specular"]
+
+    #     low_input = torch.cat([occWarp_demodulate_img, basecolor, metallic, specular, depth, roughness, normal], dim=1).cuda()
+    #     high_input = data["occ-warp_HighResoTAAPreTonemapHDRColor"].cuda()
+
+    #     mask = torch.zeros_like(occWarp_demodulate_img)
+    #     mask[occWarp_demodulate_img < 0] = 0
+    #     mask[occWarp_demodulate_img >= 0] = 1
+
+    #     extras["mask"] = mask
+        
+    #     high_mask = torch.zeros_like(high_input)
+    #     high_mask[high_input < 0] = 0
+    #     high_mask[high_input >= 0] = 1
+
+    #     extras["high_mask"] = high_mask
+
+    #     gt = {"low" : data["PreTonemapHDRColor"].cuda(), "high" : data["HighResoTAAPreTonemapHDRColor"].cuda()}
+    #     input = {"low" : low_input, "high" : high_input}
+
+    if type == "SS-glossy_shading":
 
         # mixed training ss only and extra+ss
         if config.SS_only_ratio > 0:
@@ -337,6 +376,7 @@ def Process_Input(data, type="color", ss_only_flag=False):
                 data["occ-warp_demodulatePreTonemapHDRColor"] = data["demodulatePreTonemapHDRColor"]
 
         occWarp_demodulate_img = data["occ-warp_demodulatePreTonemapHDRColor"]
+        warp_demodulate_img = data["warp_demodulatePreTonemapHDRColor"]
 
         depth = data["SceneDepth"]
         metallic = data["Metallic"]
@@ -348,19 +388,21 @@ def Process_Input(data, type="color", ss_only_flag=False):
         low_input = torch.cat([occWarp_demodulate_img, basecolor, metallic, specular, depth, roughness, normal], dim=1).cuda()
         high_input = data["occ-warp_HighResoTAAPreTonemapHDRColor"].cuda()
 
-        mask = torch.zeros_like(occWarp_demodulate_img)
-        mask[occWarp_demodulate_img < 0] = 0
-        mask[occWarp_demodulate_img >= 0] = 1
+        mask = torch.zeros_like(warp_demodulate_img)
+        mask[warp_demodulate_img < 0] = 0
+        mask[warp_demodulate_img >= 0] = 1
 
         extras["mask"] = mask
         
-        high_mask = torch.zeros_like(high_input)
-        high_mask[high_input < 0] = 0
-        high_mask[high_input >= 0] = 1
+        high_mask = Upsampler2_Nearest(mask)
 
         extras["high_mask"] = high_mask
+        
+        data["mask"] = mask
+        data["high_mask"] = high_mask
 
         gt = {"low" : data["PreTonemapHDRColor"].cuda(), "high" : data["HighResoTAAPreTonemapHDRColor"].cuda()}
+        
         input = {"low" : low_input, "high" : high_input}
 
     else:
