@@ -199,8 +199,8 @@ def warp_img_with_hole(img, motion_vector, normal_pair, stencil_pair, worldPosit
     stencil_previous, stencil_now = stencil_pair
     worldPosition_previous, worldPosition_now = worldPosition_pair
 
-    normal_previous = np.pad(normal_previous, ((1, 1), (1, 1), (0, 0)), constant_value=0)
-    stencil_previous = np.pad(stencil_previous, ((1, 1), (1, 1), (0, 0)), constant_value=0)
+    normal_previous = np.pad(normal_previous, ((1, 1), (1, 1), (0, 0)), constant_values=0)
+    stencil_previous = np.pad(stencil_previous, ((1, 1), (1, 1), (0, 0)), constant_values=0)
     worldPosition_previous = np.pad(worldPosition_previous, ((1, 1), (1, 1), (0, 0)), constant_values=1e5)
 
     img_padded = np.pad(img, ((1, 1), (1, 1), (0, 0)), constant_values=-10.0)
