@@ -13,8 +13,8 @@ Dataloader_Keys = [ "PreTonemapHDRColor" ,
                     ]
 
 
-mLossHoleArgument = True
-mLossHardArgument = True
+mLossHoleArgument = 5
+mLossHardArgument = 1
 
 dataType = "SS-glossy_shading"
 

@@ -26,7 +26,7 @@ class LossHardArgument(nn.Module):
 
 class mLoss(nn.Module):
     def __init__(self):
-        super(mLoss,self).__init__()
+        super(mLoss, self).__init__()
         self.hole = LossHoleArgument()
         self.hard = LossHardArgument()
 
