@@ -127,6 +127,10 @@ if __name__ == '__main__':
 
         imageio.imwrite(pjoin(tar_dir, "occ_warp", "Warp.{:04d}.exr".format(idx)), occWarpped_img)
         imageio.imwrite(pjoin(tar_dir, "occ_warp", "MotionVector.{:04d}.exr".format(idx)), occMotionVector)
+
+        prevNormal = normal
+        prevStencil = stencil
+        prevPosition = position
         
 
 
