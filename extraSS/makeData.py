@@ -1,5 +1,3 @@
-from ctypes.wintypes import tagRECT
-from json import load
 import numpy as np
 import os
 from os.path import join as pjoin
@@ -12,7 +10,7 @@ import toolFuncs
 
 #################### Parameters #################################
 
-tar_dir = ''
+tar_dir = '/home/Data/disk1/Songyin/Data/seq1'
 use_demodulation = True
 glossy_demodulation = True
 
@@ -42,7 +40,7 @@ def load_exr_img(path):
 
 if __name__ == '__main__':
 
-    file_list = glob(pjoin(tar_dir, "Basecolor*"))
+    file_list = glob(pjoin(tar_dir, "BaseColor*"))
 
     indexes = []
     for info in file_list:
@@ -84,7 +82,7 @@ if __name__ == '__main__':
 
             demodulation[basecolor == 0] = 0
 
-        imageio.imwrite(pjoin(tar_dir, 'demodulation', "Demodulation.{:04d}.exr".format(idx)), demodulation)
+            imageio.imwrite(pjoin(tar_dir, 'demodulation', "Demodulation.{:04d}.exr".format(idx)), demodulation)
 
 
         print("Demodulation done.\n")
@@ -106,7 +104,7 @@ if __name__ == '__main__':
         else:
             prevImg = load_exr_img(pjoin(tar_dir, "PreTonemapHDRColor.{:04d}.exr".format(idx-1)))
 
-        motionVector = load_exr_img(pjoin(tar_dir, "MotionVector.{04d}.exr".format(idx)))
+        motionVector = load_exr_img(pjoin(tar_dir, "MotionVector.{:04d}.exr".format(idx)))
         normal = load_exr_img(pjoin(tar_dir, "WorldNormal.{:04d}.exr".format(idx)))
         stencil = load_exr_img(pjoin(tar_dir, "MyStencil.{:04d}.exr".format(idx)))
         position = load_exr_img(pjoin(tar_dir, "WorldPosition.{:04d}.exr".format(idx)))
@@ -129,6 +127,10 @@ if __name__ == '__main__':
 
         imageio.imwrite(pjoin(tar_dir, "occ_warp", "Warp.{:04d}.exr".format(idx)), occWarpped_img)
         imageio.imwrite(pjoin(tar_dir, "occ_warp", "MotionVector.{:04d}.exr".format(idx)), occMotionVector)
+
+        prevNormal = normal
+        prevStencil = stencil
+        prevPosition = position
         
 
 
