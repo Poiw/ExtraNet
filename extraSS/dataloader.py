@@ -235,23 +235,25 @@ class DataDirInfo():
     def __len__(self):
         return len(self.index_list)
 
-    def getPath(self, Prefix, index):
+    def getPath(self, Prefix, index, offset=0):
 
         if Prefix not in self.Valid_Data_prefix:
             raise NotImplementedError("The prefix type is unknown.")
 
+        query_index = self.index_list[index] - offset
+
         if Prefix == "OccMotionVector":
-            return pjoin(self.data_dir, "occ_warp", "MotionVector.{:04d}.exr".format(self.index_list[index]))
+            return pjoin(self.data_dir, "occ_warp", "MotionVector.{:04d}.exr".format(query_index))
         elif Prefix == "warp_demodulatePreTonemapHDRColor":
-            return pjoin(self.data_dir, "warp", "Warp.{:04d}.exr".format(self.index_list[index]))
+            return pjoin(self.data_dir, "warp", "Warp.{:04d}.exr".format(query_index))
         elif Prefix == "occ-warp_demodulatePreTonemapHDRColor":
-            return pjoin(self.data_dir, "occ_warp", "Warp.{:04d}.exr".format(self.index_list[index]))
+            return pjoin(self.data_dir, "occ_warp", "Warp.{:04d}.exr".format(query_index))
         elif Prefix == "HighResoTAAPreTonemapHDRColor":
-            return pjoin(self.data_dir, "High+TAA", "PreTonemapHDRColor.{:04d}.exr".format(self.index_list[index]))
+            return pjoin(self.data_dir, "High+TAA", "PreTonemapHDRColor.{:04d}.exr".format(query_index))
         elif Prefix == "demodulatePreTonemapHDRColor":
-            return pjoin(self.data_dir, "demodulation", "Demodulation.{:04d}.exr".format(self.index_list[index]))
+            return pjoin(self.data_dir, "demodulation", "Demodulation.{:04d}.exr".format(query_index))
         else:
-            return pjoin(self.data_dir, "{}.{:04d}.exr".format(Prefix, self.index_list[index]))
+            return pjoin(self.data_dir, "{}.{:04d}.exr".format(Prefix, query_index))
 
     def getChannel(self, Prefix):
 
@@ -296,7 +298,7 @@ class extraSS_Dataset(torch.utils.data.Dataset):
 
                     channel = self.data_info.getChannel(unwarpped_key)
 
-                    unwarpped_img = imageio.imread(self.data_info.getPath(unwarpped_key, index), "exr")[..., :channel]
+                    unwarpped_img = imageio.imread(self.data_info.getPath(unwarpped_key, index, 1), "exr")[..., :channel]
 
 
                     if "occ" in key:
