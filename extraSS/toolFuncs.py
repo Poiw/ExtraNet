@@ -80,6 +80,71 @@ def cal_warp_index_weight(warp_index, max_height, max_width):
     return [weight_i0, weight_i1, weight_j0, weight_j1], [warp_i0, warp_i1, warp_j0, warp_j1]
 
 
+def GetOCCMV(motion2, depthCurr):
+    # warp the motion vector back so that we can use occ motion vector
+    height, width, _ = motion2.shape
+
+    occmv = np.zeros((height, width, _))
+
+    cullingBuffer = np.zeros((height, width))
+    cullingBuffer[cullingBuffer == 0.] = 10.
+    # back warp scattering
+    for i in range(height):
+        for j in range(width):
+            samplePos = np.array([i + motion2[i, j, 1], j - motion2[i, j, 0]])
+            # check four neighbour, overwrite them if the len of this mv is bigger than the other
+            Pos00 = np.floor(samplePos).astype(np.int)
+            Pos10 = np.array([Pos00[0] + 1, Pos00[1]])
+            Pos01 = np.array([Pos00[0], Pos00[1] + 1])
+            Pos11 = np.array([Pos00[0] + 1, Pos00[1] + 1])
+            if Pos00[0] < 0 or Pos00[0] >= height or Pos00[1] < 0 or Pos00[1] >= width:
+                pass
+            else:
+                # if  colorClose(albedoCurr[i, j], albedoPrev[Pos00[0], Pos00[1]]) :
+                if cullingBuffer[Pos00[0], Pos00[1]] > depthCurr[i, j][0]:
+                    cullingBuffer[Pos00[0], Pos00[1]] = depthCurr[i, j][0]
+                    occmv[Pos00[0], Pos00[1]] = motion2[i, j]
+            if Pos01[0] < 0 or Pos01[0] >= height or Pos01[1] < 0 or Pos01[1] >= width:
+                pass
+            else:
+                # if np.square(motion2[i, j]).sum() > np.square(occmv[Pos01[0], Pos01[1]]).sum():
+                # if  colorClose(albedoCurr[i, j], albedoPrev[Pos01[0], Pos01[1]]) :
+                if cullingBuffer[Pos01[0], Pos01[1]] > depthCurr[i, j][0]:
+                    cullingBuffer[Pos01[0], Pos01[1]] = depthCurr[i, j][0]
+                    occmv[Pos01[0], Pos01[1]] = motion2[i, j]
+            if Pos10[0] < 0 or Pos10[0] >= height or Pos10[1] < 0 or Pos10[1] >= width:
+                pass
+            else:
+                # if np.square(motion2[i, j]).sum() > np.square(occmv[Pos10[0], Pos10[1]]).sum():
+                # if  colorClose(albedoCurr[i, j], albedoPrev[Pos10[0], Pos10[1]]) :
+                if cullingBuffer[Pos10[0], Pos10[1]] > depthCurr[i, j][0]:
+                    cullingBuffer[Pos10[0], Pos10[1]] = depthCurr[i, j][0]
+                    occmv[Pos10[0], Pos10[1]] = motion2[i, j]
+            if Pos11[0] < 0 or Pos11[0] >= height or Pos11[1] < 0 or Pos11[1] >= width:
+                pass
+            else:
+                # if np.square(motion2[i, j]).sum() > np.square(occmv[Pos11[0], Pos11[1]]).sum():
+                # if  colorClose(albedoCurr[i, j], albedoPrev[Pos11[0], Pos11[1]]) :
+                if cullingBuffer[Pos11[0], Pos11[1]] > depthCurr[i, j][0]:
+                    cullingBuffer[Pos11[0], Pos11[1]] = depthCurr[i, j][0]
+                    occmv[Pos11[0], Pos11[1]] = motion2[i, j]
+    # final mv generate
+    finalmv = np.zeros((height, width, _))
+
+    flat_index = np.arange(height * width)
+    i = flat_index // width
+    j = flat_index - i * width
+
+    warp2_i = np.clip(np.floor(i + motion2[i, j, 1]), 0, height - 1).astype(np.long)
+    warp2_j = np.clip(np.floor(j - motion2[i, j, 0]), 0, width - 1).astype(np.long)
+
+    finalmv = occmv[warp2_i, warp2_j]
+    finalmv = finalmv.reshape((height, width, 3)).astype(np.float32)
+    
+    
+    return finalmv
+
+
 def warp_img(img, motion_vector):
 
     height, width = img.shape[0], img.shape[1]
