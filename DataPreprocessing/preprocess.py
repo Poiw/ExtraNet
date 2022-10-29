@@ -612,6 +612,7 @@ def make_hole(id, globalInfo, start, end):
                     # prev_depth = cv.imread(os.path.join(globalInfo.mPath, globalInfo.PrefixSD + str(idx + t) + ".exr"), cv.IMREAD_UNCHANGED)[..., :3]
                     occ_motion_vector = GetOCCMV(motion_vector_temp, depth_target)
                     if DEBUG_OCC:
+                        occ_motion_vector = cv.cvtColor(occ_motion_vector, cv.COLOR_RGB2BGR)
                         cv.imwrite(os.path.join(globalInfo.mOCCWarpPath, "OCCMotionVector" + idx_res + '.' + str(WARP_NUM - t) + ".exr"), occ_motion_vector)
 
                     occ_motion_vector = np.pad(occ_motion_vector, ((1, 1), (1, 1), (0, 0)), constant_values=0.0)
