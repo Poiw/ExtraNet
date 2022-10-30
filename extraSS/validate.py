@@ -25,8 +25,8 @@ import config
 import time
 
 parser = argparse.ArgumentParser(description='train.py') #
-parser.add_argument('--data_dir', type=str, default='E:\\Data\\Bunker\\1', help='data dir')
-parser.add_argument('--data_name', type=str, default='Bunker', help='data name')
+parser.add_argument('--data_dir', type=str, default='/home/songyin/Data/disk1/Songyin/Data/seq1', help='data dir')
+# parser.add_argument('--data_name', type=str, default='Bunker', help='data name')
 parser.add_argument('--output_dir', type=str, default='', help='output dir')
 parser.add_argument('--model_path', type=str, default='', help='model_path')
 
@@ -60,7 +60,7 @@ def train():
 
 
     # DataLoader
-    valList = dataloader.extraSS_Dataset(args.data_dir, args.data_name, config.Dataloader_Keys)
+    valList = dataloader.extraSS_Dataset(args.data_dir, config.Dataloader_Keys)
     valLoader = DataLoader(valList,
                                 batch_size=1,
                                 shuffle=False,
