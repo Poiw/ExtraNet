@@ -89,6 +89,7 @@ def train():
                                 shuffle=True,
                                 num_workers=args.num_works,
                                 drop_last=True,
+                                persistent_workers=True,
                                 collate_fn=dataloader.extraSS_Dataset_syndata)
 
     valList = dataloader.extraSS_Dataset(args.data_dir, config.Dataloader_Keys)
