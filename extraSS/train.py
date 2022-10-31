@@ -28,6 +28,7 @@ parser.add_argument('--data_dir', type=str, default='/home/songyin/Data/disk1/So
 # parser.add_argument('--data_name', type=str, default='Bunker', help='data name')
 parser.add_argument('--log_dir', type=str, default='/home/songyin/Data/disk1/Songyin/Data/log', help='saving dir')
 parser.add_argument('--info', type=str, default='', help='short description')
+parser.add_argument('--recovery_path', type=str, default=None, help='recovery path')
 
 parser.add_argument('--num_works', type=int, default=8, help='data loading threads')
 parser.add_argument('--lr', type=float, default=1e-3, help='learning rate')
@@ -109,7 +110,15 @@ def train():
     else:
         raise NotImplementedError
 
-    for e in tqdm(range(args.total_epoch)):
+    if args.recovery_path is not None:
+        checkpoint = torch.load(pjoin(args.recovery_path, 'models', 'checkpoint.pth'))
+        model.load_state_dict(checkpoint['model'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        writer_iter = checkpoint['writer_iter']
+
+    start_epoch = writer_iter // len(trainLoader)
+
+    for e in tqdm(range(start_epoch, args.total_epoch)):
 
         Loss = 0
         Low_l1 = 0
