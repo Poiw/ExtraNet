@@ -3,6 +3,7 @@ from pyexpat import model
 import sys
 import torch
 import torch.nn as nn
+from torch import optim
 # from tensorboardX import SummaryWriter1
 from torch.utils.tensorboard import SummaryWriter   
 from torch.utils.data import DataLoader
@@ -81,6 +82,7 @@ def train():
 
     # Optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr = args.lr)
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.total_epoch, eta_min=1e-6)
 
 
     # DataLoader
@@ -114,6 +116,7 @@ def train():
         checkpoint = torch.load(pjoin(args.recovery_path, 'models', 'checkpoint.pth'))
         model.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])
+        scheduler.load_state_dict(checkpoint['scheduler'])
         writer_iter = checkpoint['writer_iter']
 
     start_epoch = writer_iter // len(trainLoader)
@@ -156,6 +159,8 @@ def train():
         writer.add_scalar('train/Low_L1', Low_l1 / len(trainLoader), writer_iter)
         writer.add_scalar('train/High_L1', High_l1 / len(trainLoader), writer_iter)
 
+        scheduler.step()
+
         if e % args.saving_epoch == 0:
 
             val_times = 10
@@ -197,6 +202,7 @@ def train():
             torch.save({
                 'model' : model.state_dict(),
                 'optimizer' : optimizer.state_dict(),
+                'scheduler' : scheduler.state_dict(),
                 'writer_iter' : writer_iter
             }, pjoin(val_saving_folder, 'checkpoint.pth'))
 
@@ -204,6 +210,7 @@ def train():
             torch.save({
                 'model' : model.state_dict(),
                 'optimizer' : optimizer.state_dict(),
+                'scheduler' : scheduler.state_dict(),
                 'writer_iter' : writer_iter
             }, pjoin(model_saving_path, 'checkpoint.pth'))
         
