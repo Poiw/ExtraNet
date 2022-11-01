@@ -19,9 +19,12 @@ mLossHardArgument = 1
 dataType = "SS-glossy_shading"
 
 # train
-SS_only_ratio = 0.3
+SS_only_ratio = 0.01
 # test
 # SS_only_ratio = -1
+
+low_weight = 3
+high_weight = 0.5
 
 loss_func_name = "Multireso_mLoss"
 

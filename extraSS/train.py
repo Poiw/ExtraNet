@@ -106,7 +106,7 @@ def train():
     if config.loss_func_name == "mLoss":
         criterion = Losses.mLoss()
     elif config.loss_func_name == "Multireso_mLoss":
-        criterion = Losses.Multireso_mLoss()
+        criterion = Losses.Multireso_mLoss(low_weight=config.low_weight, high_weight=config.high_weight)
     else:
         raise NotImplementedError
 
