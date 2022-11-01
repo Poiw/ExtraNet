@@ -95,8 +95,11 @@ def train():
             last_output = pred["high"].detach().cpu()
 
             for key in data:
+                dir_path = pjoin(output_dir, key)
+                if not os.path.exists(dir_path):
+                    os.makedirs(dir_path)
                 img = utils.tensorToNumpy(data[key][0])
-                utils.save_exr(img, pjoin(output_dir, "{}_{}.exr".format(key, index)))
+                utils.save_exr(img, pjoin(dir_path, "{}_{}.exr".format(key, index)))
 
 
 if __name__ == '__main__':

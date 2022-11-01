@@ -436,6 +436,7 @@ def Postprocess(data, pred, type="color"):
             data["low_pred"] = pred["low"].detach().cpu()
             data["high_pred"] = pred["high"].detach().cpu()
             data["blend_weight"] = pred["blend_weight"].detach().cpu()
+            data["low_pred_shading"] = pred["low_shading"].detach().cpu()
 
         else:
             raise NotImplementedError
