@@ -397,7 +397,8 @@ class ExtraNet_demodulate_noHistory_SS_blend(nn.Module):
 
         output = {
             "low" : lowreso_color,
-            "high" : highreso_color
+            "high" : highreso_color,
+            "blend_weight" : blend_weight
         }
         
         return output
