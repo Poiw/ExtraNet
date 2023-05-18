@@ -1,3 +1,5 @@
 trainModels
 Test_Res
 */__pycache__
+
+DataPreprocessing/slurm*

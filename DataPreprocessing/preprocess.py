@@ -27,7 +27,7 @@ cp_command = "cp" if platform == 'Linux' else "copy"
 
 glossiness_scene = True
 
-Thread_NUM = 16  # make sure sampleNumber / Thread_NUM > 5
+Thread_NUM = 32  # make sure sampleNumber / Thread_NUM > 5
 
 class GlobalInfo():
 
@@ -140,7 +140,7 @@ def init(path):
 
     globalInfo = GlobalInfo(path, PrefixSN)
 
-    start = 9999
+    start = 99999
     end = 0
 
     for filePath in glob.glob(pjoin(path, "*")):
