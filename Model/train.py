@@ -92,7 +92,7 @@ def train(dataLoaderIns, saveDir, modelName):
 if __name__ =="__main__":
     os.environ["CUDA_VISIBLE_DEVICES"] = "0"
     trainDiffuseDataset = Loaders.MedTrainDataset(0)
-    trainDiffuseLoader = data.DataLoader(trainDiffuseDataset,config.batch_size,shuffle=True,num_workers=6, pin_memory=True)
+    trainDiffuseLoader = data.DataLoader(trainDiffuseDataset,config.batch_size,shuffle=True,num_workers=12, pin_memory=True)
     
     if not os.path.exists(config.saving_dir):
         os.mkdir(config.saving_dir)

@@ -20,6 +20,7 @@ import time
 from torch.utils.tensorboard import SummaryWriter
 
 from os.path import join as pjoin
+from tqdm import tqdm
 
 def GetStartEnd(path):
     start = 99999
@@ -36,9 +37,11 @@ def GetStartEnd(path):
     return start, end+1, prefix
 
 
-def inference(modelPath, path, prefix, idx, outputDir):
+def inference(modelPath, path, prefix, idx, outputDir, gloss_scene=False):
 
     model = ExtraNet.ExtraNet(18,3)
+
+    os.makedirs(outputDir, exist_ok=True)
 
 
     model_CKPT = torch.load(modelPath, map_location="cuda:0")
@@ -137,13 +140,27 @@ def inference(modelPath, path, prefix, idx, outputDir):
         skybox = ImgRead(path, idx,prefix=prefix+"PreTonemapHDRColor", cvtrgb=False)  # For simplicity, the skybox can be extracted from PreTonemapHDRColor file by counting only pixels with normal of (-1,-1,-1).
 
 
-        res=res*albedo
+        if gloss_scene:
+            specular = ImgRead(path, idx, prefix=prefix+config.TestSpecularPrefix, cvtrgb=False)
+            metallic = ImgRead(path, idx, prefix=prefix+config.TestMetalicPrefix, cvtrgb=False)
+
+            albedo = albedo + specular * 0.08 * ( 1 - metallic )
+
+            res = res * albedo
+
+        else:
+            res=res*albedo
 
         hole = np.logical_and(Normalimg[:,:,0] == -1, Normalimg[:,:,1] == -1)
         hole = np.logical_and(Normalimg[:,:,2] == -1, hole)
         res[hole] = skybox[hole]
         ImgWrite(outputDir,"res",idx,res)
         ImgWrite(outputDir,"gt",idx,gt)
+
+        if idx % 2 == 0:
+            ImgWrite(outputDir,"merged",idx,gt)
+        else:
+            ImgWrite(outputDir,"merged",idx,res)
                 
 
 def Tensor2NP(t):
@@ -155,12 +172,16 @@ def Tensor2NP(t):
 
 
 if __name__ =="__main__":
-    inference('medieval.pth.tar', 
-        path = "../TestData", 
-        prefix = "MedievalDocks",
-        idx = 339,
-        outputDir='../Test_Res/')
+
+    for idx in tqdm(range(250, 370)):
+        inference('bunker.pth.tar', 
+            path = "/export/work/songyin/Bunker/Train_w_Shadow/Seq1", 
+            prefix = "",
+            idx = idx,
+            outputDir='/export/work/songyin/Test/ExtraNet/Bunker_Seq1',
+            gloss_scene=True)
     
+    print('done')
     
 
 

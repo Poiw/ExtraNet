@@ -3,3 +3,4 @@ Test_Res
 */__pycache__
 
 DataPreprocessing/slurm*
+Model/slurm*

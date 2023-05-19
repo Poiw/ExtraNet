@@ -10,10 +10,10 @@ from multiprocessing import Process
 from os.path import join as pjoin
 
 
-threadNum = 4
-compressedOutputDir = "/home/poi/Data/Research/extraNet/Data/RedwoodForest_Compressed_New"
-dirList = ["/home/poi/Data/Research/extraNet/Data/RedwoodForest_updated"]
-ScenePrefix = "RedwoodForest_Example_Procedural"
+threadNum = 32
+compressedOutputDir = "/export/work/songyin/Infiltrator0430/ExtraNet_CompressedData"
+dirList = ["/export/work/songyin/Infiltrator0430/Seq1", "/export/work/songyin/Infiltrator0430/Seq2", "/export/work/songyin/Infiltrator0430/Seq3", "/export/work/songyin/Infiltrator0430/Seq4", "/export/work/songyin/Infiltrator0430/Seq5", "/export/work/songyin/Infiltrator0430/Seq6"]
+ScenePrefix = ""
 
 
 
@@ -165,6 +165,8 @@ if __name__ == "__main__":
 
     for di in dirList:
         MergeFile(di, pjoin(compressedOutputDir, os.path.basename(di)))
+
+    print("done")
     # for di in dirList:
     #     CompressRange(di)
 
